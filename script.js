@@ -11,5 +11,5 @@ navMenu.querySelectorAll('a').forEach(link => link.addEventListener('click', () 
   menuToggle.textContent = '☰';
 }));
 document.getElementById('login-preview').addEventListener('click', () => {
-  alert('A área de estudos será ativada na próxima etapa, depois de configurarmos o login e o banco de dados com segurança. 💜');
+  alert('A área de estudos será ativada em uma próxima etapa, depois de configurarmos o login e o banco de dados com segurança. 💜');
 });
