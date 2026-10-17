@@ -63,3 +63,11 @@
   .concurso-card { flex-direction: column; padding: 22px; }
   .concurso-dados { grid-template-columns: 1fr; }
 }
+
+/* Linha do tempo ampliada para evidenciar a continuidade da trajetória */
+.timeline { position: relative; }
+.timeline article { position: relative; transition: transform .2s ease, box-shadow .2s ease; }
+.timeline article:hover { transform: translateY(-2px); box-shadow: 0 12px 28px #53377d12; }
+.timeline-current { border-color: #d9c4f8 !important; background: linear-gradient(110deg,#fff,#fbf5ff) !important; }
+.timeline-current .timeline-dot { background: #d65393; }
+.timeline article p:last-child { line-height: 1.7; }

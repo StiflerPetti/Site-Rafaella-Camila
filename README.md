@@ -1,18 +1,21 @@
-# Site Rafaella Camila — versão atualizada
+# Site — Rafaella Camila Peixoto de Freitas
 
-Arquivos do portfólio com foto e informações organizadas a partir do PDF fornecido.
+Portfólio profissional responsivo com paleta lilás, rosa e creme, fotografia de perfil, trajetória em linha do tempo, formação complementar e seção de estudos em prévia.
+
+## Publicação no GitHub Pages
+1. Abra o repositório `StiflerPetti/Site-Rafaella-Camila`.
+2. Entre em **Add file → Upload files**.
+3. Envie os cinco arquivos desta pasta, substituindo os arquivos de mesmo nome.
+4. Confirme em **Commit changes**.
+5. Aguarde alguns minutos e abra `https://stiflerpetti.github.io/Site-Rafaella-Camila/`. Se não atualizar, recarregue a página.
 
 ## Arquivos
 - `index.html`: conteúdo do site.
-- `estilo.css`: visual responsivo em tons pastel.
-- `script.js`: menu para celular e aviso da prévia da área de estudos.
-- `foto-rafaella.jpeg`: foto utilizada na página inicial.
+- `estilo.css`: visual e responsividade.
+- `script.js`: menu móvel e interações simples.
+- `foto-rafaella.jpeg`: retrato usado na página inicial.
 
-## Atualização no GitHub
-Envie os quatro arquivos para a raiz do repositório `Site-Rafaella-Camila`, substituindo o `index.html` e os arquivos de estilo/script atuais quando solicitado. O nome do CSS usado pelo HTML é `estilo.css`.
+A área de estudos é apenas uma prévia visual; login e armazenamento de dados ainda não estão conectados.
 
-## Observações
-- A área de estudos continua sendo apenas uma prévia visual, sem autenticação nem banco de dados.
-- O PDF de referência informa que os dados foram coletados do Lattes em 10/10/2022. Confirme se o vínculo profissional permanece atual antes de divulgar.
-- Não foram incluídos e-mail, telefone ou endereço, pois não constam no material fornecido.
-- O repositório e o site são públicos; não adicione informações pessoais sensíveis.
+## Observação sobre o currículo
+A linha do tempo reúne dados do currículo fornecido e do resultado retificado do TJDFT compartilhado na conversa. Antes de divulgar publicamente, confira datas e descrições profissionais.
