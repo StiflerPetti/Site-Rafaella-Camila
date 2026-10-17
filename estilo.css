@@ -296,3 +296,41 @@
     min-width: 260px;
   }
 }
+
+
+/* Linha do tempo horizontal em percurso contínuo, com conteúdo mais leve */
+.journey { background: #fffdf9; }
+.journey .journey-title { max-width: none; text-align: center; margin: 0 auto 58px; }
+.journey .journey-title h2 { margin: 0; color: #17683b; font-size: clamp(2.4rem, 5vw, 3.6rem); }
+.journey .journey-title h2 span { color: #17683b; }
+.journey .timeline-horizontal {
+  --timeline-green: #17683b;
+  max-width: 1320px; margin: 0 auto; padding: 12px 0;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 30px 34px;
+  position: relative;
+}
+.journey .timeline-horizontal::before { content: none; }
+.journey .timeline-horizontal article {
+  display: block; position: relative; z-index: 1; padding: 25px 22px 22px 25px;
+  min-height: 188px; background: transparent !important; border: 0 !important;
+  border-radius: 0; border-top: 2px solid var(--timeline-green) !important;
+  box-shadow: none !important; transform: none !important;
+}
+.journey .timeline-horizontal article::before {
+  content: ''; position: absolute; top: -11px; left: 18px; width: 16px; height: 16px;
+  border: 3px solid var(--timeline-green); border-radius: 50%; background: #fffdf9;
+}
+.journey .timeline-horizontal .timeline-dot {
+  display: block; width: auto; height: auto; margin: 0 0 11px; padding: 0;
+  border: 0; border-radius: 0; background: transparent !important; color: var(--timeline-green);
+  box-shadow: none; font-size: 1.15rem; font-weight: 800; letter-spacing: .02em;
+}
+.journey .timeline-horizontal .timeline-dot::before { content: none; }
+.journey .timeline-horizontal .eyebrow { color: #6d7b70; font-size: .65rem; margin-bottom: 5px; }
+.journey .timeline-horizontal h3 { font-family: 'DM Sans', sans-serif; font-size: 1.08rem; line-height: 1.35; margin: 0 0 7px; color: #242c27; }
+.journey .timeline-horizontal p.muted { font-size: .9rem; line-height: 1.55; margin: 0; color: #68736b; }
+.journey .timeline-horizontal .timeline-current { border-top-color: #d65393 !important; }
+.journey .timeline-horizontal .timeline-current::before { border-color: #d65393; }
+.journey .timeline-horizontal .timeline-current .timeline-dot { color: #b34e86; }
+@media (max-width: 850px) { .journey .timeline-horizontal { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 20px; } }
+@media (max-width: 560px) { .journey .timeline-horizontal { grid-template-columns: 1fr; gap: 16px; } .journey .timeline-horizontal article { min-height: 0; padding-bottom: 18px; } .journey .journey-title { margin-bottom: 36px; } }

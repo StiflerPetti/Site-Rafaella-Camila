@@ -11,3 +11,6 @@ Site profissional pessoal de Rafaella Camila Peixoto de Freitas.
 6. Confira https://stiflerpetti.github.io/Site-Rafaella-Camila/
 
 Mantenha `index.html`, `estilo.css`, `script.js` e `foto-rafaella.jpeg` na raiz do repositório. A linha do tempo da seção **Minha trajetória** é desenhada pelo CSS em `estilo.css`.
+
+
+A seção “Minha trajetória” foi simplificada visualmente: título único, marcos resumidos e trilhas verdes horizontais em uma grade espaçosa.
