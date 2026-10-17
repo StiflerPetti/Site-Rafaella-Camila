@@ -71,3 +71,81 @@
 .timeline-current { border-color: #d9c4f8 !important; background: linear-gradient(110deg,#fff,#fbf5ff) !important; }
 .timeline-current .timeline-dot { background: #d65393; }
 .timeline article p:last-child { line-height: 1.7; }
+
+/* TRAJETÓRIA: linha do tempo vertical conectada e visível */
+.journey .timeline {
+  position: relative;
+  display: grid;
+  gap: 22px;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 8px 0;
+}
+.journey .timeline::before {
+  content: "";
+  position: absolute;
+  left: 20px;
+  top: 28px;
+  bottom: 28px;
+  width: 3px;
+  border-radius: 5px;
+  background: linear-gradient(180deg, #d65393 0%, #a78add 45%, #d9c4f8 100%);
+}
+.journey .timeline article {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: start;
+  gap: 18px;
+  padding: 22px 24px 22px 12px;
+  border: 1px solid #e6d9f5;
+  border-radius: 20px;
+  background: rgba(255,255,255,.97);
+  box-shadow: 0 7px 20px rgba(83,55,125,.06);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.journey .timeline article:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(83,55,125,.12);
+}
+.journey .timeline .timeline-dot {
+  position: relative;
+  z-index: 2;
+  width: 42px;
+  height: 42px;
+  border: 4px solid #f0e8fb;
+  border-radius: 50%;
+  background: #8662c5;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: .78rem;
+  font-weight: 800;
+  box-shadow: 0 0 0 3px #fff;
+}
+.journey .timeline article:nth-child(odd) .timeline-dot { background: #b34e86; }
+.journey .timeline article.timeline-current {
+  border: 2px solid #d65393 !important;
+  background: linear-gradient(110deg, #fff, #fff5fa) !important;
+  box-shadow: 0 10px 28px rgba(214,83,147,.12);
+}
+.journey .timeline article.timeline-current .timeline-dot {
+  background: #d65393;
+  border-color: #f9dce9;
+}
+.journey .timeline article h3 { margin: 3px 0 6px; color: #30283b; }
+.journey .timeline article p { margin: 5px 0; }
+.journey .timeline article .eyebrow { font-size: .68rem; letter-spacing: .12em; }
+@media (max-width: 600px) {
+  .journey .timeline { gap: 16px; }
+  .journey .timeline::before { left: 17px; }
+  .journey .timeline article {
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 12px;
+    padding: 17px 14px 17px 9px;
+    border-radius: 16px;
+  }
+  .journey .timeline .timeline-dot { width: 36px; height: 36px; font-size: .7rem; }
+  .journey .timeline article .eyebrow { font-size: .61rem; }
+}
