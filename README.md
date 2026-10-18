@@ -17,3 +17,6 @@ Portfólio profissional em HTML, CSS e JavaScript, com identidade visual suave e
 6. Confira https://stiflerpetti.github.io/Site-Rafaella-Camila/
 
 **Importante:** mantenha os arquivos na raiz do repositório, sem colocá-los dentro de uma subpasta. A área de estudos é apenas uma prévia visual e ainda não tem autenticação ou banco de dados.
+
+
+Atualização: a seção separada de “Conquistas” foi removida, mantendo os marcos relevantes dentro da trajetória. O link correspondente também foi retirado da navegação.
