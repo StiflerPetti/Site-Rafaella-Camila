@@ -1,6 +1,5 @@
-/* Preencha com a URL e a chave publicável/anon do seu projeto Supabase.
-   Este arquivo é público. NUNCA use service_role ou qualquer chave secreta aqui. */
+/* Configuração pública do Supabase. Nunca coloque chaves secretas neste arquivo. */
 window.SUPABASE_CONFIG = {
-  url: 'https://zsmhxscwpugmgszvuvej.supabase.com',
-  anonKey: 'sb_publishable_IJStCwQLlVbQT3SCxlGdFA_reFOYRg0'
+  url: 'https://zsmhxscwpugmgszvuvej.supabase.co',
+  anonKey: 'sb_publishable_IJStCwQL1VbQT3SCx1GdFA_reFOYRG0'
 };
