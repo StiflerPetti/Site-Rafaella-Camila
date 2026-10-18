@@ -34,3 +34,12 @@ Site estático compatível com GitHub Pages, com login por e-mail/senha e área 
 
 ## Google Sheets
 A integração não está conectada ainda. A estrutura fica preparada para uma etapa seguinte. Para enviar dados ao Sheets com segurança, use Google Apps Script como endpoint validado ou uma função server-side/Edge Function; não coloque tokens privados do Google no JavaScript público. Antes de implementar, decidir se a planilha será um relatório exportado ou um espelho automático dos registros.
+
+
+## Novo recurso: planejamento por edital (migração adicional)
+1. Publique os arquivos atualizados do pacote. Preserve seu `supabase-config.js` atual.
+2. No Supabase, abra **SQL Editor > New query** e execute uma única vez o arquivo `supabase-edital-schema.sql`. Ele cria as tabelas privadas de editais/tópicos e adiciona o vínculo opcional do tópico à tabela de sessões existente; não apaga o histórico.
+3. Entre no site, abra **Meu edital de estudos**, selecione o PDF e informe o nome do concurso. A extração é uma sugestão automática; revise e corrija as linhas no formato `Disciplina | tópico` antes de salvar.
+4. Selecione um tópico no formulário de sessão para vincular o estudo. As sessões continuam aparecendo no histórico, gráficos e ranking existentes. O checklist permite marcar Não iniciado, Estudando, Concluído ou Revisar.
+
+**Limites da extração:** PDFs com texto selecionável funcionam melhor. PDFs digitalizados como imagem precisam de OCR; este pacote informa quando não há texto extraível e permite revisão manual. O PDF é processado localmente no navegador; o sistema guarda o texto extraído e os tópicos revisados, não o arquivo PDF original.

@@ -31,7 +31,7 @@ if (menuToggle && navMenu) {
     message(({login:'Entre com seu e-mail e senha.',signup:'Crie uma conta com seu e-mail e uma senha de pelo menos 8 caracteres.',reset:'Enviaremos um link para redefinir sua senha.'})[mode]);
   };
   document.querySelectorAll('.auth-tab').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
-  const showDashboard = async user => { currentUser=user; panel.hidden=true; dashboard.hidden=false; $('signed-in-email').textContent=user.email||'Conta conectada'; await loadHistory(); };
+  const showDashboard = async user => { currentUser=user; panel.hidden=true; dashboard.hidden=false; $('signed-in-email').textContent=user.email||'Conta conectada'; await loadHistory(); await loadEditals(); };
   const showAuth = () => { currentUser=null; panel.hidden=false; dashboard.hidden=true; };
   async function loadHistory(){
     if(!client||!currentUser)return;
@@ -79,6 +79,123 @@ if (menuToggle && navMenu) {
     if(!sessions.length){const p=document.createElement('p');p.textContent='Ainda não há sessões registradas. Sua primeira sessão começa aqui!';history.append(p);return;}
     sessions.forEach(x=>{const card=document.createElement('article');card.className='history-item';const h=document.createElement('h4');h.textContent=x.subject;const date=document.createElement('small');date.textContent=new Date(x.studied_on+'T12:00:00').toLocaleDateString('pt-BR');const details=document.createElement('p');details.textContent=`${x.minutes} min · ${x.questions||0} questões · ${x.correct||0} acertos${x.topic?' · '+x.topic:''}`;card.append(h,date,details);if(x.notes){const n=document.createElement('p');n.textContent=x.notes;card.append(n);}history.append(card);});
   }
+  // Planejador de edital. A extração acontece localmente no navegador; apenas o texto revisado e os tópicos são enviados ao Supabase.
+  let activeEditalId = null;
+  let editalDraft = null;
+  let editalTopics = [];
+  let editalTopicMinutes = new Map();
+  const statusLabels = {pending:'Não iniciado', studying:'Estudando', done:'Concluído', review:'Revisar'};
+  const editalFeedback = (text, kind='info') => { const el=$('edital-extract-status'); if(el){el.textContent=text;el.className='edital-feedback '+kind;} };
+  const safeText = (tag, className, text) => { const el=document.createElement(tag); if(className)el.className=className; el.textContent=text; return el; };
+  function parseProgramText(raw){
+    const cleaned=raw.split(/\r?\n/).map(line=>line.replace(/\s+/g,' ').trim()).filter(line=>line.length>2);
+    const start=cleaned.findIndex(line=>/conte[uú]do program[aá]tico|conhecimentos (gerais|b[aá]sicos|espec[ií]ficos)|programa de (provas|estudos)|objeto de avalia[cç][aã]o/i.test(line));
+    const lines=(start>=0?cleaned.slice(start+1):cleaned).slice(0,5000);
+    const out=[]; let subject='Conteúdo programático';
+    const seen=new Set();
+    for(let line of lines){
+      line=line.replace(/^([•●▪◦\-–—]+\s*)/,'').trim();
+      if(!line||/^\d{1,4}$/.test(line)||/^(p[aá]gina|www\.|https?:\/\/|edital n[ºo])/i.test(line))continue;
+      line=line.replace(/^\(?\d+(?:\.\d+)*[.)]?\s+/, '').trim();
+      if(!line||line.length<3)continue;
+      const letters=line.replace(/[^A-Za-zÀ-ÿ]/g,'');
+      const upper=letters.length>3 && letters===letters.toLocaleUpperCase('pt-BR');
+      const looksHeading=upper && line.length<130 && !/[.;:]$/.test(line);
+      if(looksHeading){subject=line.replace(/\s*[:\-–—]+$/,'').trim();continue;}
+      // Ignora linhas de rodapé muito curtas e evita duplicatas exatas.
+      if(line.length>500)line=line.slice(0,500);
+      const key=(subject+'|'+line).toLocaleLowerCase('pt-BR');
+      if(seen.has(key))continue; seen.add(key);
+      out.push(subject+' | '+line);
+      if(out.length>=1500)break;
+    }
+    return out;
+  }
+  $('edital-pdf')?.addEventListener('change', async e=>{
+    const file=e.target.files?.[0]; if(!file)return;
+    $('pdf-file-name').textContent=file.name;
+    if(file.type!=='application/pdf'&&!file.name.toLowerCase().endsWith('.pdf')){editalFeedback('Selecione um arquivo PDF válido.','error');return;}
+    if(file.size>25*1024*1024){editalFeedback('O PDF ultrapassa 25 MB. Se possível, envie uma versão menor.','error');return;}
+    if(!window.pdfjsLib){editalFeedback('Não foi possível carregar o leitor de PDF. Confira a conexão e tente novamente.','error');return;}
+    editalFeedback('Lendo o PDF no navegador… arquivos digitalizados como imagem podem não conter texto extraível.');
+    try{
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      const bytes=await file.arrayBuffer(); const pdf=await window.pdfjsLib.getDocument({data:bytes}).promise; let full='';
+      for(let pageNo=1;pageNo<=pdf.numPages;pageNo++){
+        const page=await pdf.getPage(pageNo); const content=await page.getTextContent();
+        let lastY=null, line='';
+        for(const item of content.items){if(!item.str)continue;const y=item.transform?.[5];if(lastY!==null&&Math.abs(y-lastY)>3){full+=line+'\n';line='';}line+=(line?' ':'')+item.str;lastY=y;}
+        full+=line+'\n';
+        if(pageNo%10===0)editalFeedback(`Lendo o PDF… página ${pageNo} de ${pdf.numPages}.`);
+      }
+      if(full.trim().length<80){editalFeedback('Não encontrei texto suficiente neste PDF. Ele pode ser digitalizado como imagem; será necessário OCR ou um PDF com texto selecionável.','error');return;}
+      const rows=parseProgramText(full);
+      if(!rows.length){editalFeedback('O texto foi lido, mas não consegui separar tópicos com confiança. Cole ou organize os itens manualmente na caixa de revisão.','error');}
+      else editalFeedback(`Extração inicial concluída: ${rows.length} linhas sugeridas. Confira tudo antes de salvar — a identificação automática pode precisar de ajustes.`, 'success');
+      editalDraft={filename:file.name, text:full};
+      if(!$('edital-name').value.trim())$('edital-name').value=file.name.replace(/\.pdf$/i,'');
+      $('edital-topic-text').value=rows.join('\n'); $('edital-review-wrap').hidden=false;
+    }catch(err){console.error(err);editalFeedback('Não consegui ler esse PDF. Tente outro arquivo ou copie o conteúdo programático para a caixa de revisão.','error');}
+  });
+  $('cancel-edital-review')?.addEventListener('click',()=>{$('edital-review-wrap').hidden=true;editalDraft=null;});
+  $('save-edital')?.addEventListener('click',async()=>{
+    if(!client||!currentUser)return editalFeedback('Entre na conta para salvar um edital.','error');
+    const title=$('edital-name').value.trim();
+    const rows=$('edital-topic-text').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+    if(!title)return editalFeedback('Informe o nome do concurso.','error');
+    const parsed=[];
+    for(const row of rows){const pos=row.indexOf('|');if(pos<1||pos===row.length-1){return editalFeedback('Revise esta linha: '+row+' — use o formato Disciplina | tópico.','error');}const subject=row.slice(0,pos).trim(),topic=row.slice(pos+1).trim();if(subject&&topic)parsed.push({subject:subject.slice(0,160),topic:topic.slice(0,500)});}
+    if(!parsed.length)return editalFeedback('Adicione pelo menos um tópico no formato Disciplina | tópico.','error');
+    if(parsed.length>1500)return editalFeedback('O limite por importação é de 1.500 tópicos.','error');
+    const btn=$('save-edital');btn.disabled=true;
+    try{
+      const {data:edital,error}=await client.from('study_editals').insert({user_id:currentUser.id,title,role:$('edital-role').value.trim()||null,exam_board:$('edital-board').value.trim()||null,source_filename:editalDraft?.filename||null,extracted_text:editalDraft?.text||null}).select('id').single();
+      if(error)throw error;
+      const topicRows=parsed.map((x,i)=>({user_id:currentUser.id,edital_id:edital.id,subject:x.subject,topic:x.topic,sort_order:i}));
+      for(let i=0;i<topicRows.length;i+=250){const {error:topicError}=await client.from('study_edital_topics').insert(topicRows.slice(i,i+250));if(topicError){await client.from('study_editals').delete().eq('id',edital.id).eq('user_id',currentUser.id);throw topicError;}}
+      editalDraft=null;$('edital-review-wrap').hidden=true;$('edital-pdf').value='';$('pdf-file-name').textContent='Nenhum arquivo selecionado';$('edital-name').value='';$('edital-role').value='';$('edital-board').value='';
+      editalFeedback(`Edital salvo com ${parsed.length} tópicos. Confira a lista e corrija qualquer item que a extração não tenha identificado corretamente.`, 'success');
+      await loadEditals();await openEdital(edital.id);
+    }catch(err){console.error(err);editalFeedback('Não foi possível salvar o edital. Execute o arquivo supabase-edital-schema.sql no SQL Editor do Supabase e tente novamente. '+friendlyError(err),'error');}
+    finally{btn.disabled=false;}
+  });
+  async function loadEditals(){
+    if(!client||!currentUser)return;
+    const box=$('saved-editals');box.replaceChildren();
+    const {data,error}=await client.from('study_editals').select('id,title,role,exam_board,created_at').eq('user_id',currentUser.id).order('created_at',{ascending:false});
+    if(error){box.append(safeText('p','chart-empty','Para ativar editais, execute supabase-edital-schema.sql no Supabase. '+friendlyError(error)));return;}
+    if(!data?.length){box.append(safeText('p','chart-empty','Nenhum edital salvo ainda. Importe o primeiro PDF acima.'));return;}
+    data.forEach(ed=>{
+      const row=document.createElement('div');row.className='saved-edital-item'+(ed.id===activeEditalId?' active':'');
+      const open=document.createElement('button');open.type='button';open.className='saved-edital-open';open.append(safeText('strong','',ed.title),safeText('small','',[ed.role,ed.exam_board].filter(Boolean).join(' · ')||'Concurso'));
+      open.addEventListener('click',()=>openEdital(ed.id));
+      const del=document.createElement('button');del.type='button';del.className='saved-edital-delete';del.textContent='Excluir';del.setAttribute('aria-label','Excluir edital '+ed.title);del.addEventListener('click',async()=>{if(!confirm(`Excluir o edital “${ed.title}” e seu checklist? As sessões de estudo existentes serão mantidas.`))return;const {error}=await client.from('study_editals').delete().eq('id',ed.id).eq('user_id',currentUser.id);if(error){editalFeedback('Não foi possível excluir: '+friendlyError(error),'error');return;}if(activeEditalId===ed.id){activeEditalId=null;$('edital-topics-panel').hidden=true;refreshTopicSelector([]);}await loadEditals();});
+      row.append(open,del);box.append(row);
+    });
+  }
+  function refreshTopicSelector(topics){
+    const select=$('study-topic-select');if(!select)return;select.replaceChildren();const blank=document.createElement('option');blank.value='';blank.textContent='Estudo livre — sem edital';select.append(blank);
+    topics.filter(t=>t.status!=='done').forEach(t=>{const opt=document.createElement('option');opt.value=t.id;opt.textContent=`${t.subject} — ${t.topic}`;opt.dataset.subject=t.subject;opt.dataset.topic=t.topic;select.append(opt);});
+  }
+  $('study-topic-select')?.addEventListener('change',()=>{const opt=$('study-topic-select').selectedOptions[0];if(opt?.value){$('study-subject').value=opt.dataset.subject||'';$('study-topic').value=opt.dataset.topic||'';}});
+  async function openEdital(id){
+    const {data:ed,error}=await client.from('study_editals').select('id,title').eq('id',id).eq('user_id',currentUser.id).single();
+    if(error){editalFeedback('Não foi possível abrir o edital: '+friendlyError(error),'error');return;}
+    const {data:topics,error:topicError}=await client.from('study_edital_topics').select('id,edital_id,subject,topic,status,notes,sort_order,last_reviewed_at').eq('edital_id',id).eq('user_id',currentUser.id).order('sort_order',{ascending:true});
+    if(topicError){editalFeedback('Não foi possível carregar os tópicos: '+friendlyError(topicError),'error');return;}
+    activeEditalId=id;editalTopics=topics||[];editalTopicMinutes=new Map();if(editalTopics.length){const ids=editalTopics.map(t=>t.id);const {data:sessions}=await client.from('study_sessions').select('edital_topic_id,minutes').eq('user_id',currentUser.id).in('edital_topic_id',ids);(sessions||[]).forEach(x=>editalTopicMinutes.set(x.edital_topic_id,(editalTopicMinutes.get(x.edital_topic_id)||0)+(Number(x.minutes)||0)));}$('edital-topics-panel').hidden=false;$('active-edital-title').textContent=ed.title;renderEditalTopics();refreshTopicSelector(editalTopics);await loadEditals();
+  }
+  function renderEditalTopics(){
+    const list=$('edital-topic-list');list.replaceChildren();const done=editalTopics.filter(t=>t.status==='done').length;const pct=editalTopics.length?Math.round(done/editalTopics.length*100):0;$('edital-progress-label').textContent=pct+'%';$('edital-progress-bar').style.width=pct+'%';
+    if(!editalTopics.length){list.append(safeText('p','chart-empty','Este edital ainda não tem tópicos.'));return;}
+    const groups=new Map();editalTopics.forEach(t=>{if(!groups.has(t.subject))groups.set(t.subject,[]);groups.get(t.subject).push(t);});
+    for(const [subject,topics] of groups){const group=document.createElement('section');group.className='edital-subject-group';const h=safeText('h5','',subject);const count=safeText('span','topic-count',`${topics.filter(t=>t.status==='done').length}/${topics.length} concluídos`);const head=document.createElement('div');head.className='saved-edital-head';head.style.marginTop='0';head.style.paddingTop='0';head.style.borderTop='0';head.append(h,count);group.append(head);
+      topics.forEach(t=>{const row=document.createElement('div');row.className='edital-topic-row';const nameWrap=document.createElement('div');nameWrap.className='edital-topic-name-wrap';const name=safeText('div','edital-topic-name',t.topic);const mins=editalTopicMinutes.get(t.id)||0;const timeLabel=safeText('small','edital-topic-time',mins?`Tempo registrado: ${Math.floor(mins/60)}h ${String(mins%60).padStart(2,'0')}min`:'Ainda sem tempo registrado');nameWrap.append(name,timeLabel);const select=document.createElement('select');select.className='edital-topic-status status-'+t.status;select.setAttribute('aria-label','Status: '+t.topic);Object.entries(statusLabels).forEach(([value,label])=>{const opt=document.createElement('option');opt.value=value;opt.textContent=label;select.append(opt);});select.value=t.status;select.addEventListener('change',async()=>{select.disabled=true;const patch={status:select.value,last_reviewed_at:select.value==='review'?new Date().toISOString():t.last_reviewed_at};const {error}=await client.from('study_edital_topics').update(patch).eq('id',t.id).eq('user_id',currentUser.id);select.disabled=false;if(error){select.value=t.status;editalFeedback('Não foi possível atualizar o tópico: '+friendlyError(error),'error');return;}t.status=patch.status;t.last_reviewed_at=patch.last_reviewed_at;select.className='edital-topic-status status-'+t.status;renderEditalTopics();refreshTopicSelector(editalTopics);});row.append(nameWrap,select);group.append(row);});
+      list.append(group);
+    }
+  }
+  $('reload-editals')?.addEventListener('click',loadEditals);
+
   $('auth-form').addEventListener('submit',async e=>{
     e.preventDefault(); if(!client){message('Antes de usar o login, configure a URL e a chave pública no arquivo supabase-config.js e execute supabase-schema.sql no Supabase.','error');return;}
     const email=$('auth-email').value.trim(), password=$('auth-password').value;
@@ -98,11 +215,12 @@ if (menuToggle && navMenu) {
     if(minutes<1)return message('Use o cronômetro ou informe pelo menos 1 minuto de estudo.','error');
     if(correct>questions)return message('O número de acertos não pode ser maior que o de questões resolvidas.','error');
     const btn=e.submitter;btn.disabled=true;
-    const payload={user_id:currentUser.id,subject:$('study-subject').value.trim(),topic:$('study-topic').value.trim()||null,minutes,questions,correct,notes:$('study-notes').value.trim()||null,studied_on:new Date().toISOString().slice(0,10)};
+    const linkedTopic=$('study-topic-select')?.value||null;const payload={user_id:currentUser.id,subject:$('study-subject').value.trim(),topic:$('study-topic').value.trim()||null,minutes,questions,correct,notes:$('study-notes').value.trim()||null,studied_on:new Date().toISOString().slice(0,10),...(linkedTopic?{edital_topic_id:linkedTopic}:{})};
     const {error}=await client.from('study_sessions').insert(payload);
     btn.disabled=false;
     if(error){message('Não foi possível salvar. Verifique se executou supabase-schema.sql. '+friendlyError(error),'error');return;}
-    $('session-form').reset();$('study-questions').value='0';$('study-correct').value='0';stopTimer(true);message('Sessão salva com segurança!','success');await loadHistory();
+    if(linkedTopic){await client.from('study_edital_topics').update({status:'studying'}).eq('id',linkedTopic).eq('user_id',currentUser.id).eq('status','pending');if(activeEditalId)await openEdital(activeEditalId);}
+    $('session-form').reset();$('study-topic-select').value='';$('study-questions').value='0';$('study-correct').value='0';stopTimer(true);message('Sessão salva com segurança!','success');await loadHistory();
   });
   function paintTimer(){$('timer-display').textContent=fmt(elapsed+(startedAt?Math.floor((Date.now()-startedAt)/1000):0));}
   function startTimer(){if(startedAt)return;startedAt=Date.now();ticker=setInterval(paintTimer,1000);$('timer-start').disabled=true;$('timer-pause').disabled=false;}
