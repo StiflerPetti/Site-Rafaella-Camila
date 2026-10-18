@@ -75,12 +75,26 @@
     </section>
 
     <section class="section study" id="estudos">
-      <div class="study-card"><div class="study-symbol">✿</div><p class="eyebrow">ESPAÇO EXCLUSIVO</p><h2>Meu cantinho de <span>estudos.</span></h2><p>Um espaço planejado para acompanhar metas, registrar horas líquidas e celebrar cada conquista.</p><div class="study-preview"><div><span>⏱</span><strong>Cronômetro</strong><small>Registre seu tempo de foco</small></div><div><span>📚</span><strong>Matérias</strong><small>Organize seu plano de estudos</small></div><div><span>✦</span><strong>Progresso</strong><small>Acompanhe sua evolução</small></div></div><button class="button primary" id="login-preview">Área de estudos em breve ↗</button><p class="security-note">Esta seção é uma prévia visual. O acesso privado com login e salvamento de progresso ainda precisa ser desenvolvido.</p></div>
+      <div class="study-card auth-shell"><div class="study-symbol">✿</div><p class="eyebrow">ESPAÇO EXCLUSIVO</p><h2>Meu cantinho de <span>estudos.</span></h2><p>Entre para registrar suas sessões, acompanhar o tempo de foco e organizar sua evolução.</p>
+        <div id="auth-status" class="auth-message" role="status">Configure o projeto Supabase para ativar o acesso seguro.</div>
+        <div id="auth-panel" class="auth-panel">
+          <div class="auth-tabs"><button type="button" class="auth-tab active" data-mode="login">Entrar</button><button type="button" class="auth-tab" data-mode="signup">Criar conta</button><button type="button" class="auth-tab" data-mode="reset">Recuperar senha</button></div>
+          <form id="auth-form"><label for="auth-email">E-mail</label><input id="auth-email" type="email" autocomplete="email" required placeholder="voce@exemplo.com"><div id="password-wrap"><label for="auth-password">Senha</label><input id="auth-password" type="password" autocomplete="current-password" minlength="8" placeholder="Mínimo de 8 caracteres"></div><button class="button primary auth-submit" id="auth-submit" type="submit">Entrar ↗</button></form>
+        </div>
+        <div id="study-dashboard" class="study-dashboard" hidden>
+          <div class="dashboard-top"><div><p class="eyebrow">SEU ESPAÇO PRIVADO</p><h3 id="signed-in-email"></h3></div><button class="button secondary" id="logout-button" type="button">Sair</button></div>
+          <div class="study-stats"><div><small>Tempo registrado</small><strong id="total-time">0h 00min</strong></div><div><small>Sessões</small><strong id="total-sessions">0</strong></div><div><small>Questões resolvidas</small><strong id="total-questions">0</strong></div></div>
+          <form id="session-form" class="session-form"><h3>Registrar estudo</h3><label for="study-subject">Matéria</label><input id="study-subject" required maxlength="100" placeholder="Ex.: Direito Constitucional"><label for="study-topic">Assunto (opcional)</label><input id="study-topic" maxlength="180" placeholder="Ex.: Controle de constitucionalidade"><div class="timer-box"><span id="timer-display">00:00:00</span><div class="timer-actions"><button type="button" class="button secondary" id="timer-start">Iniciar</button><button type="button" class="button secondary" id="timer-pause" disabled>Pausar</button><button type="button" class="button secondary" id="timer-reset">Zerar</button></div></div><label for="study-minutes">Ou informe os minutos manualmente</label><input id="study-minutes" type="number" min="1" max="1440" placeholder="Minutos estudados"><div class="form-row"><div><label for="study-questions">Questões resolvidas</label><input id="study-questions" type="number" min="0" max="10000" value="0"></div><div><label for="study-correct">Acertos</label><input id="study-correct" type="number" min="0" max="10000" value="0"></div></div><label for="study-notes">Observações (opcional)</label><textarea id="study-notes" rows="2" maxlength="1000" placeholder="Anotações sobre a sessão"></textarea><button class="button primary auth-submit" type="submit">Salvar sessão de estudo</button></form>
+          <div class="history-head"><h3>Histórico recente</h3><button class="button secondary" type="button" id="refresh-history">Atualizar</button></div><div id="study-history" class="study-history"><p>Suas sessões salvas aparecerão aqui.</p></div>
+        </div>
+      </div>
     </section>
 
     <section class="section contact" id="contato"><p class="eyebrow">CONTATO</p><h2>Vamos começar <span>uma conversa?</span></h2><p>Os dados de contato não constam no material enviado. Um e-mail profissional ou perfil público pode ser adicionado quando você desejar.</p><a class="button secondary" href="#inicio">Voltar ao início ↑</a></section>
   </main>
   <footer><a class="logo" href="#inicio">Rafaella Camila Peixoto de Freitas <span>♡</span></a><span>Feito com carinho ✦</span><a href="#inicio">Voltar ao topo ↑</a></footer>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
