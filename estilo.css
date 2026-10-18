@@ -460,3 +460,101 @@
 .ranking-track{height:18px;background:#f0eaf6;border-radius:99px;overflow:hidden;margin-left:56px}
 .ranking-track span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#7853bd,#df5798);transition:width .35s ease}
 @media(max-width:600px){.ranking-row-head{grid-template-columns:38px minmax(0,1fr);gap:10px}.ranking-position{width:36px;height:36px}.ranking-row-head b{grid-column:2}.ranking-track{margin-left:48px}}
+
+
+/* AJUSTES VISUAIS DA PÁGINA INICIAL — foto maior e trajetória limpa */
+.hero-visual { height: 490px; }
+.portrait { width: min(350px, 82%); height: 425px; }
+.blob-pink { width: 355px; height: 355px; }
+.blob-lilac { width: 270px; height: 270px; }
+@media (max-width: 800px) {
+  .hero-visual { height: 370px; }
+  .portrait { width: min(285px, 78%); height: 340px; }
+  .blob-pink { width: 285px; height: 285px; }
+  .blob-lilac { width: 205px; height: 205px; }
+}
+
+/* Limpa os traços da tentativa anterior e recupera ilustrações delicadas de folhas */
+.journey { position: relative; overflow: hidden; }
+.journey .timeline-horizontal {
+  background-image: none !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: auto;
+  gap: 30px 28px;
+  max-width: 1250px;
+  padding: 18px 5px 26px;
+}
+.journey .timeline-horizontal::before {
+  content: none !important;
+  background: none !important;
+}
+.journey .timeline-horizontal::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  inset: 0;
+  opacity: .62;
+  background-repeat: no-repeat;
+  background-position: left 45% top 12%, right 2% bottom 4%;
+  background-size: 115px 180px, 130px 200px;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 190' fill='none'%3E%3Cpath d='M13 177 C45 145 35 106 72 72 C88 56 93 31 105 12' stroke='%23b6a080' stroke-width='2.2' stroke-linecap='round'/%3E%3Cg fill='%23b8c7a1' stroke='%23fffaf7' stroke-width='1.4'%3E%3Cellipse cx='35' cy='143' rx='10' ry='23' transform='rotate(-48 35 143)'/%3E%3Cellipse cx='56' cy='121' rx='10' ry='22' transform='rotate(48 56 121)'/%3E%3Cellipse cx='52' cy='96' rx='9' ry='20' transform='rotate(-48 52 96)'/%3E%3Cellipse cx='78' cy='72' rx='9' ry='20' transform='rotate(43 78 72)'/%3E%3Cellipse cx='78' cy='48' rx='8' ry='18' transform='rotate(-42 78 48)'/%3E%3Cellipse cx='98' cy='29' rx='8' ry='17' transform='rotate(43 98 29)'/%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 210' fill='none'%3E%3Cpath d='M15 200 C48 164 60 132 66 99 S95 43 126 10' stroke='%23b6a080' stroke-width='2.2' stroke-linecap='round'/%3E%3Cg fill='%23d9a8c3' stroke='%23fff7fb' stroke-width='1.5'%3E%3Cellipse cx='35' cy='166' rx='10' ry='23' transform='rotate(-48 35 166)'/%3E%3Cellipse cx='63' cy='145' rx='10' ry='22' transform='rotate(48 63 145)'/%3E%3Cellipse cx='55' cy='118' rx='9' ry='20' transform='rotate(-48 55 118)'/%3E%3Cellipse cx='83' cy='92' rx='9' ry='20' transform='rotate(43 83 92)'/%3E%3Cellipse cx='87' cy='63' rx='8' ry='18' transform='rotate(-42 87 63)'/%3E%3Cellipse cx='112' cy='37' rx='8' ry='17' transform='rotate(43 112 37)'/%3E%3C/g%3E%3C/svg%3E");
+}
+.journey .timeline-horizontal article {
+  grid-column: auto !important;
+  grid-row: auto !important;
+  transform: none !important;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  padding: 0;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+.journey .timeline-horizontal .timeline-dot {
+  min-width: 92px;
+  max-width: 150px;
+  padding: 8px 14px;
+  border: 1px solid #e7c9df;
+  outline: none;
+  border-radius: 999px;
+  background: #fff !important;
+  color: #8651a7 !important;
+  box-shadow: 0 4px 12px #6e3b7b10;
+  font-size: .8rem;
+}
+.journey .timeline-horizontal .timeline-dot::after { color: #8651a7; font-size: .8rem; }
+.journey .timeline-horizontal article > div:nth-child(2) {
+  width: 100%;
+  max-width: none;
+  min-height: 160px;
+  padding: 23px 23px 21px;
+  border: 1px solid #ead9ed !important;
+  border-radius: 24px 12px 24px 12px;
+  background: linear-gradient(145deg, #f8eaf6 0%, #fff 70%) !important;
+  box-shadow: 0 10px 26px #56326b12;
+}
+.journey .timeline-horizontal article:nth-child(3n+2) > div:nth-child(2) { background: linear-gradient(145deg,#f8e5ee 0%,#fff 72%) !important; }
+.journey .timeline-horizontal article:nth-child(3n) > div:nth-child(2) { background: linear-gradient(145deg,#eee5fb 0%,#fff 72%) !important; }
+.journey .timeline-horizontal article > div:nth-child(2)::before { content: none !important; }
+.journey .timeline-horizontal article.timeline-current > div:nth-child(2),
+.journey .timeline-horizontal .timeline-current,
+.journey .timeline-horizontal .timeline-current::before { border-color: #ead9ed !important; outline: none !important; box-shadow: 0 10px 26px #56326b12 !important; }
+@media (max-width: 900px) {
+  .journey .timeline-horizontal { grid-template-columns: repeat(2,minmax(0,1fr)); grid-template-rows:auto; gap:22px; }
+  .journey .timeline-horizontal::after { background-size: 80px 125px, 85px 135px; }
+}
+@media (max-width: 560px) {
+  .journey .timeline-horizontal { grid-template-columns: 1fr; gap:18px; border:0; margin:0; width:100%; padding:10px 0 20px; }
+  .journey .timeline-horizontal::after { background-size: 62px 96px, 65px 100px; opacity:.32; }
+  .journey .timeline-horizontal article { padding-left:0; }
+  .journey .timeline-horizontal article::before { content:none !important; }
+  .journey .timeline-horizontal article > div:nth-child(2) { min-height:0; padding:20px; }
+}
