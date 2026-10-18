@@ -53,6 +53,28 @@ if (menuToggle && navMenu) {
     for(let i=6;i>=0;i--){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-i);const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const minutes=sessions.filter(x=>x.studied_on===key).reduce((sum,x)=>sum+(Number(x.minutes)||0),0);days.push({key,label:d.toLocaleDateString('pt-BR',{weekday:'short'}).replace('.',''),minutes});}
     const maxMinutes=Math.max(60,...days.map(d=>d.minutes));
     days.forEach(d=>{const item=document.createElement('div');item.className='chart-day';const value=document.createElement('span');value.className='chart-value';value.textContent=d.minutes? (d.minutes>=60?Math.floor(d.minutes/60)+'h'+(d.minutes%60?String(d.minutes%60).padStart(2,'0'):''):d.minutes+'m'):'0';const track=document.createElement('div');track.className='chart-bar-track';const bar=document.createElement('div');bar.className='chart-bar';bar.style.height=Math.max(4,d.minutes/maxMinutes*100)+'%';track.append(bar);const label=document.createElement('small');label.textContent=d.label;item.append(value,track,label);chart.append(item);});
+    const ranking=$('subject-ranking'); 
+    if(ranking){
+      ranking.replaceChildren();
+      const totals=new Map();
+      sessions.forEach(x=>{const subject=(x.subject||'Sem matéria').trim();totals.set(subject,(totals.get(subject)||0)+(Number(x.minutes)||0));});
+      const sorted=[...totals.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8);
+      if(!sorted.length){const p=document.createElement('p');p.className='chart-empty';p.textContent='Registre suas sessões para montar seu ranking.';ranking.append(p);}
+      else{
+        const max=sorted[0][1]||1;
+        sorted.forEach(([subject,minutes],i)=>{
+          const row=document.createElement('div');row.className='ranking-row';
+          const head=document.createElement('div');head.className='ranking-row-head';
+          const rank=document.createElement('span');rank.className='ranking-position';rank.textContent=String(i+1).padStart(2,'0');
+          const name=document.createElement('strong');name.textContent=subject;
+          const time=document.createElement('b');time.textContent=Math.floor(minutes/60)+'h '+String(minutes%60).padStart(2,'0')+'min';
+          head.append(rank,name,time);
+          const track=document.createElement('div');track.className='ranking-track';
+          const bar=document.createElement('span');bar.style.width=Math.max(3,minutes/max*100)+'%';track.append(bar);
+          row.append(head,track);ranking.append(row);
+        });
+      }
+    }
     const history=$('study-history'); history.replaceChildren();
     if(!sessions.length){const p=document.createElement('p');p.textContent='Ainda não há sessões registradas. Sua primeira sessão começa aqui!';history.append(p);return;}
     sessions.forEach(x=>{const card=document.createElement('article');card.className='history-item';const h=document.createElement('h4');h.textContent=x.subject;const date=document.createElement('small');date.textContent=new Date(x.studied_on+'T12:00:00').toLocaleDateString('pt-BR');const details=document.createElement('p');details.textContent=`${x.minutes} min · ${x.questions||0} questões · ${x.correct||0} acertos${x.topic?' · '+x.topic:''}`;card.append(h,date,details);if(x.notes){const n=document.createElement('p');n.textContent=x.notes;card.append(n);}history.append(card);});
