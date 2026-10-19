@@ -846,3 +846,16 @@ body.study-page{margin:0;min-height:100vh;background:linear-gradient(135deg,#fff
 @media(max-width:1100px){.study-page #study-history{grid-template-columns:repeat(4,minmax(0,1fr))}.study-page .study-app{grid-template-columns:190px minmax(0,1fr);gap:16px}}
 @media(max-width:760px){.study-page .study-app{grid-template-columns:1fr;padding:14px;gap:16px}.study-page .study-sidebar{position:static;min-height:0;width:100%}.study-page .analytics-grid{grid-template-columns:1fr}.study-page #study-history{grid-template-columns:repeat(2,minmax(0,1fr))}.study-page .study-stats{grid-template-columns:1fr}.study-page #subject-ranking{grid-template-columns:1fr!important}}
 @media(max-width:430px){.study-page #study-history{grid-template-columns:1fr}.study-page #study-history .daily-history-item{min-height:0}.study-page .session-form .focus-layout{grid-template-columns:1fr}}
+
+
+/* Ajustes finais solicitados: caminhada abaixo de Hora de Focar e sem divisórias duplicadas */
+.study-page .focus-timer-panel { border-right: 0 !important; }
+.study-page .session-fields-panel { border-left: 0 !important; padding-left: 0 !important; }
+.study-page .session-form .focus-layout { gap: clamp(24px, 3vw, 42px); }
+.study-page .study-workspace { display: block !important; order: 2; min-width: 0; width: 100%; }
+.study-page #historico { order: initial; width: 100%; }
+.study-page .study-stats { order: 3; }
+.study-page .analytics-grid { order: 4; }
+.study-page .ranking-card { order: 5; }
+.study-page .edital-panel { order: 6; }
+@media (max-width: 680px) { .study-page .session-fields-panel { border-left: 0 !important; padding-left: 0 !important; } }
