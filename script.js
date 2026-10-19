@@ -40,8 +40,15 @@ if (menuToggle && navMenu) {
     const sessions=data||[];
     const {data:catalogData} = await client.from('study_subjects').select('name').eq('user_id',currentUser.id).order('name');
     const subjectList = [...new Set([...(catalogData||[]).map(x=>x.name), ...sessions.map(x => (x.subject || '').trim())].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
-    const subjectOptions = $('study-subject-options');
-    if(subjectOptions){subjectOptions.replaceChildren();subjectList.forEach(subject=>{const option=document.createElement('option');option.value=subject;subjectOptions.append(option);});}
+    const subjectSelect = $('study-subject');
+    if(subjectSelect){
+      const selectedSubject = subjectSelect.value;
+      subjectSelect.replaceChildren();
+      const placeholder=document.createElement('option');placeholder.value='';placeholder.textContent='Selecione uma matéria';subjectSelect.append(placeholder);
+      subjectList.forEach(subject=>{const option=document.createElement('option');option.value=subject;option.textContent=subject;subjectSelect.append(option);});
+      const addOption=document.createElement('option');addOption.value='__add_subject__';addOption.textContent='＋ Adicionar nova matéria...';subjectSelect.append(addOption);
+      if(subjectList.includes(selectedSubject))subjectSelect.value=selectedSubject;
+    }
     const totalMinutes=sessions.reduce((sum,x)=>sum+(Number(x.minutes)||0),0);
     $('total-time').textContent=Math.floor(totalMinutes/60)+'h '+String(totalMinutes%60).padStart(2,'0')+'min';
     $('total-sessions').textContent=String(sessions.length);
@@ -235,7 +242,19 @@ if (menuToggle && navMenu) {
     const select=$('study-topic-select');if(!select)return;select.replaceChildren();const blank=document.createElement('option');blank.value='';blank.textContent='Estudo livre — sem edital';select.append(blank);
     topics.filter(t=>t.status!=='done').forEach(t=>{const opt=document.createElement('option');opt.value=t.id;opt.textContent=`${t.subject} — ${t.topic}`;opt.dataset.subject=t.subject;opt.dataset.topic=t.topic;select.append(opt);});
   }
-  $('study-topic-select')?.addEventListener('change',()=>{const opt=$('study-topic-select').selectedOptions[0];if(opt?.value){$('study-subject').value=opt.dataset.subject||'';$('study-topic').value=opt.dataset.topic||'';}});
+  $('study-subject')?.addEventListener('change',async()=>{
+    const select=$('study-subject');
+    if(select.value==='__add_subject__'){
+      const name=prompt('Digite o nome da nova matéria:');
+      const clean=(name||'').trim().slice(0,100);
+      if(!clean){select.value='';return;}
+      const existing=[...select.options].find(o=>o.value.toLocaleLowerCase('pt-BR')===clean.toLocaleLowerCase('pt-BR'));
+      if(existing){select.value=existing.value;return;}
+      const option=document.createElement('option');option.value=clean;option.textContent=clean;
+      const add=select.querySelector('option[value="__add_subject__"]');select.insertBefore(option,add||null);select.value=clean;
+    }
+  });
+  $('study-topic-select')?.addEventListener('change',()=>{const opt=$('study-topic-select').selectedOptions[0];if(opt?.value){const subjectSelect=$('study-subject');const name=opt.dataset.subject||'';if(name&&!Array.from(subjectSelect.options).some(o=>o.value===name)){const option=document.createElement('option');option.value=name;option.textContent=name;subjectSelect.insertBefore(option,subjectSelect.querySelector('option[value="__add_subject__"]')||null);}subjectSelect.value=name;$('study-topic').value=opt.dataset.topic||'';}});
   async function openEdital(id){
     const {data:ed,error}=await client.from('study_editals').select('id,title').eq('id',id).eq('user_id',currentUser.id).single();
     if(error){editalFeedback('Não foi possível abrir o edital: '+friendlyError(error),'error');return;}
