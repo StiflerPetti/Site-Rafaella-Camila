@@ -76,7 +76,7 @@ body.study-page{margin:0;min-height:100vh;background:#fdfaf7;color:var(--ink);fo
 .study-page .session-extra-fields .form-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .study-page .session-save-bottom{display:none}
 
-/* Estatísticas, Histórico, Analytics, Ranking e Edital */
+/* Estatísticas, Histórico, Analytics e Edital */
 .study-page .study-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
 .study-page .study-stats>div,
 .study-page .history-column,
@@ -104,9 +104,73 @@ body.study-page{margin:0;min-height:100vh;background:#fdfaf7;color:var(--ink);fo
 .study-page .accuracy-track>span{display:block;height:100%;width:0;background:linear-gradient(90deg,#8a5bd0,#e45ca4)}
 .study-page .chart-footnote{color:var(--muted);font-size:.8rem;margin:0}
 
-/* Ranking de Matérias */
-.study-page #subject-ranking{display:grid !important;grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:12px !important;margin-top:16px !important}
-.study-page .ranking-subtitle{color:var(--muted);font-size:.85rem;margin:4px 0 0}
+/* Gráfico de Barras Verticais para o Ranking de Matérias */
+.study-page .vertical-ranking-chart{
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: space-around !important;
+  gap: 16px !important;
+  height: 220px !important;
+  min-height: 220px !important;
+  padding: 20px 10px 10px !important;
+  border-top: 1px solid #f0e7f8 !important;
+  margin-top: 16px !important;
+  overflow-x: auto;
+}
+.study-page .vertical-ranking-chart .ranking-row{
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  height: 100% !important;
+  flex: 1;
+  min-width: 65px;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+.study-page .vertical-ranking-chart .ranking-row-head{
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  justify-content: flex-end !important;
+  gap: 6px;
+}
+.study-page .vertical-ranking-chart .ranking-position,
+.study-page .vertical-ranking-chart .ranking-row-head b{
+  display: none !important; /* Limpa elementos antigos para focar na barra */
+}
+.study-page .vertical-ranking-chart .ranking-row-head strong{
+  font-size: .75rem !important;
+  text-align: center !important;
+  color: var(--muted) !important;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 8px;
+}
+.study-page .vertical-ranking-chart .ranking-track{
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  width: 32px !important;
+  height: 140px !important;
+  background: #f4ebff !important;
+  border-radius: 12px 12px 6px 6px !important;
+  overflow: hidden;
+}
+.study-page .vertical-ranking-chart .ranking-track span{
+  display: block !important;
+  width: 100% !important;
+  min-height: 8px !important;
+  border-radius: 10px 10px 4px 4px !important;
+  background: linear-gradient(180deg, #e45ca4 0%, #8054c7 100%) !important;
+  transition: height .3s ease;
+}
 
 /* Rodapé */
 .study-page .study-footer{padding:24px;text-align:center;color:var(--muted);font-size:.82rem}
@@ -129,6 +193,5 @@ body.study-page{margin:0;min-height:100vh;background:#fdfaf7;color:var(--ink);fo
   .study-page .focus-wrapper{grid-template-columns:1fr}
   .study-page .focus-timer-panel{border-right:0;border-bottom:1px solid var(--line);padding-right:0;padding-bottom:20px}
   .study-page .analytics-grid,
-  .study-page .study-stats,
-  .study-page #subject-ranking{grid-template-columns:1fr !important}
+  .study-page .study-stats{grid-template-columns:1fr !important}
 }
