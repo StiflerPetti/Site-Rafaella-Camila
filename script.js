@@ -111,33 +111,87 @@ if (menuToggle && navMenu) {
     }
     return out;
   }
+  let editalPdfBase64 = null;
+  let editalAiJobs = [];
+  function fileToBase64(file){
+    return new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=()=>{const value=String(reader.result||'');const comma=value.indexOf(',');resolve(comma>=0?value.slice(comma+1):value);};
+      reader.onerror=()=>reject(new Error('Não foi possível ler o arquivo PDF.'));
+      reader.readAsDataURL(file);
+    });
+  }
+  async function callEditalAI(action, selectedJob){
+    if(!client||!currentUser)throw new Error('Entre na sua conta antes de analisar um edital.');
+    if(!editalPdfBase64)throw new Error('Selecione um PDF primeiro.');
+    const body={action,pdfBase64:editalPdfBase64,mimeType:'application/pdf',fileName:editalDraft?.filename||'edital.pdf'};
+    if(selectedJob)body.selectedJob=selectedJob;
+    const {data,error}=await client.functions.invoke('analisar-edital',{body});
+    if(error)throw new Error(error.message||'Não foi possível chamar a função de análise.');
+    if(!data?.ok||!data?.result)throw new Error(data?.error||'A IA não retornou uma análise válida.');
+    return data.result;
+  }
   $('edital-pdf')?.addEventListener('change', async e=>{
     const file=e.target.files?.[0]; if(!file)return;
     $('pdf-file-name').textContent=file.name;
     if(file.type!=='application/pdf'&&!file.name.toLowerCase().endsWith('.pdf')){editalFeedback('Selecione um arquivo PDF válido.','error');return;}
-    if(file.size>25*1024*1024){editalFeedback('O PDF ultrapassa 25 MB. Se possível, envie uma versão menor.','error');return;}
-    if(!window.pdfjsLib){editalFeedback('Não foi possível carregar o leitor de PDF. Confira a conexão e tente novamente.','error');return;}
-    editalFeedback('Lendo o PDF no navegador… arquivos digitalizados como imagem podem não conter texto extraível.');
+    if(file.size>12*1024*1024){editalFeedback('O PDF ultrapassa aproximadamente 12 MB. Envie uma versão menor.','error');return;}
+    if(!client||!currentUser){editalFeedback('Entre na sua conta antes de analisar um edital.','error');return;}
+    const fileInput=$('edital-pdf'); if(fileInput)fileInput.disabled=true;
+    $('edital-ai-job-wrap').hidden=true;$('edital-review-wrap').hidden=true;
     try{
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-      const bytes=await file.arrayBuffer(); const pdf=await window.pdfjsLib.getDocument({data:bytes}).promise; let full='';
-      for(let pageNo=1;pageNo<=pdf.numPages;pageNo++){
-        const page=await pdf.getPage(pageNo); const content=await page.getTextContent();
-        let lastY=null, line='';
-        for(const item of content.items){if(!item.str)continue;const y=item.transform?.[5];if(lastY!==null&&Math.abs(y-lastY)>3){full+=line+'\n';line='';}line+=(line?' ':'')+item.str;lastY=y;}
-        full+=line+'\n';
-        if(pageNo%10===0)editalFeedback(`Lendo o PDF… página ${pageNo} de ${pdf.numPages}.`);
+      editalFeedback('Preparando o PDF para análise segura…');
+      editalPdfBase64=await fileToBase64(file);
+      editalDraft={filename:file.name,text:''};
+      editalFeedback('A IA está identificando o concurso, a banca e os cargos. Isso pode levar um pouco…');
+      const result=await callEditalAI('identify');
+      if(result.concurso)$('edital-name').value=String(result.concurso).slice(0,160);
+      else if(!$('edital-name').value.trim())$('edital-name').value=file.name.replace(/\.pdf$/i,'');
+      if(result.banca)$('edital-board').value=String(result.banca).slice(0,120);
+      const jobs=Array.isArray(result.cargos)?result.cargos.filter(j=>j&&typeof j.nome==='string'&&j.nome.trim()):[];
+      editalAiJobs=jobs;
+      const jobSelect=$('edital-ai-job');jobSelect.replaceChildren();
+      jobs.forEach(job=>{const opt=document.createElement('option');opt.value=job.nome;opt.textContent=job.nome+(job.descricao?' — '+job.descricao:'');jobSelect.append(opt);});
+      if(jobs.length){
+        $('edital-ai-job-wrap').hidden=false;
+        if(jobs.length===1){$('edital-role').value=jobs[0].nome;editalFeedback('Concurso identificado. Foi encontrado um cargo: '+jobs[0].nome+'. Clique em “Gerar matérias e tópicos” para continuar.','success');}
+        else editalFeedback(`Concurso identificado: ${result.concurso||'nome não confirmado'}. Foram encontrados ${jobs.length} cargos. Escolha o cargo antes de gerar o conteúdo programático.`, 'success');
+      }else{
+        $('edital-ai-job-wrap').hidden=true;
+        editalFeedback('A IA não conseguiu identificar cargos com segurança. Confira o PDF ou tente um arquivo mais legível. Observações: '+(result.observacoes||[]).join(' '),'error');
       }
-      if(full.trim().length<80){editalFeedback('Não encontrei texto suficiente neste PDF. Ele pode ser digitalizado como imagem; será necessário OCR ou um PDF com texto selecionável.','error');return;}
-      const rows=parseProgramText(full);
-      if(!rows.length){editalFeedback('O texto foi lido, mas não consegui separar tópicos com confiança. Cole ou organize os itens manualmente na caixa de revisão.','error');}
-      else editalFeedback(`Extração inicial concluída: ${rows.length} linhas sugeridas. Confira tudo antes de salvar — a identificação automática pode precisar de ajustes.`, 'success');
-      editalDraft={filename:file.name, text:full};
-      if(!$('edital-name').value.trim())$('edital-name').value=file.name.replace(/\.pdf$/i,'');
-      $('edital-topic-text').value=rows.join('\n'); $('edital-review-wrap').hidden=false;
-    }catch(err){console.error(err);editalFeedback('Não consegui ler esse PDF. Tente outro arquivo ou copie o conteúdo programático para a caixa de revisão.','error');}
+    }catch(err){console.error(err);editalFeedback('Falha ao analisar o edital: '+(err.message||'erro inesperado')+'. Confira se a função está publicada e se GEMINI_API_KEY está configurada.','error');}
+    finally{if(fileInput)fileInput.disabled=false;}
   });
-  $('cancel-edital-review')?.addEventListener('click',()=>{$('edital-review-wrap').hidden=true;editalDraft=null;});
+  $('edital-ai-generate')?.addEventListener('click',async()=>{
+    const selectedJob=$('edital-ai-job')?.value;
+    if(!selectedJob)return editalFeedback('Escolha um cargo para continuar.','error');
+    const btn=$('edital-ai-generate');btn.disabled=true;
+    try{
+      $('edital-role').value=selectedJob;
+      editalFeedback('Extraindo somente as matérias e os tópicos do cargo '+selectedJob+'…');
+      const result=await callEditalAI('generate_plan',selectedJob);
+      const subjects=Array.isArray(result.materias)?result.materias:[];
+      const rows=[];
+      subjects.forEach(subject=>{
+        const name=String(subject?.nome||'').trim();
+        (Array.isArray(subject?.topicos)?subject.topicos:[]).forEach(topic=>{
+          const topicName=String(topic?.nome||'').trim();
+          const detail=String(topic?.detalhe||'').trim();
+          if(name&&topicName)rows.push(name+' | '+topicName+(detail?' — '+detail:''));
+        });
+      });
+      if(!rows.length)throw new Error('A IA não encontrou tópicos estruturados para esse cargo. Tente outro PDF ou use a revisão manual.');
+      if(rows.length>1500)throw new Error('A IA encontrou mais de 1.500 tópicos. Reduza o edital ou revise a lista antes de salvar.');
+      $('edital-topic-text').value=rows.join('\n');
+      $('edital-review-wrap').hidden=false;
+      const notes=Array.isArray(result.observacoes)&&result.observacoes.length?' Observações: '+result.observacoes.join(' '):'';
+      editalFeedback(`Plano gerado para ${selectedJob}: ${subjects.length} matérias e ${rows.length} tópicos. Revise a lista e salve quando estiver correta.${notes}`,'success');
+      $('edital-review-wrap').scrollIntoView({behavior:'smooth',block:'start'});
+    }catch(err){console.error(err);editalFeedback('Não foi possível gerar o plano: '+(err.message||'erro inesperado'),'error');}
+    finally{btn.disabled=false;}
+  });
+    $('cancel-edital-review')?.addEventListener('click',()=>{$('edital-review-wrap').hidden=true;editalDraft=null;});
   $('save-edital')?.addEventListener('click',async()=>{
     if(!client||!currentUser)return editalFeedback('Entre na conta para salvar um edital.','error');
     const title=$('edital-name').value.trim();
