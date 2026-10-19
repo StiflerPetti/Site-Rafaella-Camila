@@ -567,3 +567,11 @@
 @media(max-width:720px){.edital-import-grid{grid-template-columns:1fr}.upload-drop{min-height:185px}.edital-heading{align-items:flex-start}.edital-mark{width:48px;height:48px;flex-basis:48px;font-size:1.5rem}.saved-edital-item{align-items:flex-start}.edital-topic-row{grid-template-columns:1fr;gap:7px}.edital-topic-status{max-width:none}.topics-panel-head{align-items:flex-start}}
 
 .edital-topic-name-wrap{min-width:0}.edital-topic-time{display:block;color:var(--muted);font-size:.78rem;margin-top:4px}
+
+/* Histórico em resumo diário, sem detalhes de subtemas ou anotações. */
+.study-history{grid-template-columns:1fr;gap:10px}
+.daily-history-item{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;column-gap:16px;row-gap:5px}
+.daily-history-item h4{grid-column:1/-1;text-transform:capitalize}
+.daily-history-subjects{margin:0!important;line-height:1.55;overflow-wrap:anywhere}
+.daily-history-meta{align-self:center;white-space:nowrap;color:var(--purple);font-size:.82rem}
+@media(max-width:600px){.daily-history-item{grid-template-columns:1fr}.daily-history-meta{white-space:normal}}

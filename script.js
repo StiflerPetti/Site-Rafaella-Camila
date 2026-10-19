@@ -89,7 +89,34 @@ if (menuToggle && navMenu) {
     }
     const history=$('study-history'); history.replaceChildren();
     if(!sessions.length){const p=document.createElement('p');p.textContent='Ainda não há sessões registradas. Sua primeira sessão começa aqui!';history.append(p);return;}
-    sessions.forEach(x=>{const card=document.createElement('article');card.className='history-item';const h=document.createElement('h4');h.textContent=x.subject;const date=document.createElement('small');date.textContent=new Date(x.studied_on+'T12:00:00').toLocaleDateString('pt-BR');const details=document.createElement('p');details.textContent=`${x.minutes} min · ${x.activity_type||'Estudo / revisão'} · ${x.performance_reported===false?'questões/acertos não informados':`${x.questions||0} questões · ${x.correct||0} acertos`}${x.topic?' · '+x.topic:''}`;card.append(h,date,details);if(x.notes){const n=document.createElement('p');n.textContent=x.notes;card.append(n);}history.append(card);});
+    // Resumo diário: mostra apenas os últimos sete dias, as matérias e o tempo total.
+    // Datas ISO do banco são interpretadas como datas locais, sem conversão de fuso horário.
+    const localKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const dayMap = new Map();
+    sessions.forEach(x=>{
+      if(!x.studied_on) return;
+      if(!dayMap.has(x.studied_on)) dayMap.set(x.studied_on,{subjects:new Set(),minutes:0,sessions:0});
+      const day=dayMap.get(x.studied_on); day.subjects.add((x.subject||'Sem matéria').trim()); day.minutes+=Number(x.minutes)||0; day.sessions++;
+    });
+    const today=new Date(); today.setHours(12,0,0,0);
+    for(let offset=6;offset>=0;offset--){
+      const date=new Date(today); date.setDate(today.getDate()-offset);
+      const key=localKey(date), day=dayMap.get(key);
+      const card=document.createElement('article'); card.className='history-item daily-history-item';
+      const heading=document.createElement('h4');
+      const dateLabel=date.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
+      heading.textContent=dateLabel.charAt(0).toLocaleUpperCase('pt-BR')+dateLabel.slice(1);
+      const subjects=document.createElement('p'); subjects.className='daily-history-subjects';
+      const minutes=document.createElement('small'); minutes.className='daily-history-meta';
+      if(day){
+        subjects.textContent=[...day.subjects].sort((a,b)=>a.localeCompare(b,'pt-BR')).join(' · ');
+        minutes.textContent=`${Math.floor(day.minutes/60)}h ${String(day.minutes%60).padStart(2,'0')}min de estudo · ${day.sessions} ${day.sessions===1?'sessão':'sessões'}`;
+      } else {
+        subjects.textContent='Nenhum estudo registrado';
+        minutes.textContent='0 min de estudo';
+      }
+      card.append(heading,subjects,minutes); history.append(card);
+    }
   }
   // Planejador de edital. A extração acontece localmente no navegador; apenas o texto revisado e os tópicos são enviados ao Supabase.
   let activeEditalId = null;
