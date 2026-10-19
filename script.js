@@ -35,9 +35,13 @@ if (menuToggle && navMenu) {
   const showAuth = () => { currentUser=null; panel.hidden=false; dashboard.hidden=true; };
   async function loadHistory(){
     if(!client||!currentUser)return;
-    const {data,error}=await client.from('study_sessions').select('id,subject,topic,minutes,questions,correct,notes,studied_on,created_at').eq('user_id',currentUser.id).order('studied_on',{ascending:false}).order('created_at',{ascending:false}).limit(50);
+    const {data,error}=await client.from('study_sessions').select('id,subject,topic,activity_type,minutes,questions,correct,notes,studied_on,created_at').eq('user_id',currentUser.id).order('studied_on',{ascending:false}).order('created_at',{ascending:false}).limit(50);
     if(error){$('study-history').textContent='Não foi possível carregar o histórico: '+friendlyError(error);return;}
     const sessions=data||[];
+    const {data:catalogData} = await client.from('study_subjects').select('name').eq('user_id',currentUser.id).order('name');
+    const subjectList = [...new Set([...(catalogData||[]).map(x=>x.name), ...sessions.map(x => (x.subject || '').trim())].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    const subjectOptions = $('study-subject-options');
+    if(subjectOptions){subjectOptions.replaceChildren();subjectList.forEach(subject=>{const option=document.createElement('option');option.value=subject;subjectOptions.append(option);});}
     const totalMinutes=sessions.reduce((sum,x)=>sum+(Number(x.minutes)||0),0);
     $('total-time').textContent=Math.floor(totalMinutes/60)+'h '+String(totalMinutes%60).padStart(2,'0')+'min';
     $('total-sessions').textContent=String(sessions.length);
@@ -77,7 +81,7 @@ if (menuToggle && navMenu) {
     }
     const history=$('study-history'); history.replaceChildren();
     if(!sessions.length){const p=document.createElement('p');p.textContent='Ainda não há sessões registradas. Sua primeira sessão começa aqui!';history.append(p);return;}
-    sessions.forEach(x=>{const card=document.createElement('article');card.className='history-item';const h=document.createElement('h4');h.textContent=x.subject;const date=document.createElement('small');date.textContent=new Date(x.studied_on+'T12:00:00').toLocaleDateString('pt-BR');const details=document.createElement('p');details.textContent=`${x.minutes} min · ${x.questions||0} questões · ${x.correct||0} acertos${x.topic?' · '+x.topic:''}`;card.append(h,date,details);if(x.notes){const n=document.createElement('p');n.textContent=x.notes;card.append(n);}history.append(card);});
+    sessions.forEach(x=>{const card=document.createElement('article');card.className='history-item';const h=document.createElement('h4');h.textContent=x.subject;const date=document.createElement('small');date.textContent=new Date(x.studied_on+'T12:00:00').toLocaleDateString('pt-BR');const details=document.createElement('p');details.textContent=`${x.minutes} min · ${x.activity_type||'Estudo / revisão'} · ${x.questions||0} questões · ${x.correct||0} acertos${x.topic?' · '+x.topic:''}`;card.append(h,date,details);if(x.notes){const n=document.createElement('p');n.textContent=x.notes;card.append(n);}history.append(card);});
   }
   // Planejador de edital. A extração acontece localmente no navegador; apenas o texto revisado e os tópicos são enviados ao Supabase.
   let activeEditalId = null;
@@ -269,12 +273,15 @@ if (menuToggle && navMenu) {
     if(minutes<1)return message('Use o cronômetro ou informe pelo menos 1 minuto de estudo.','error');
     if(correct>questions)return message('O número de acertos não pode ser maior que o de questões resolvidas.','error');
     const btn=e.submitter;btn.disabled=true;
-    const linkedTopic=$('study-topic-select')?.value||null;const payload={user_id:currentUser.id,subject:$('study-subject').value.trim(),topic:$('study-topic').value.trim()||null,minutes,questions,correct,notes:$('study-notes').value.trim()||null,studied_on:new Date().toISOString().slice(0,10),...(linkedTopic?{edital_topic_id:linkedTopic}:{})};
+    const linkedTopic=$('study-topic-select')?.value||null;const subject=$('study-subject').value.trim();
+    const {error:subjectError}=await client.from('study_subjects').upsert({user_id:currentUser.id,name:subject},{onConflict:'user_id,name',ignoreDuplicates:true});
+    if(subjectError){btn.disabled=false;message('Não foi possível atualizar o cadastro de matérias. '+friendlyError(subjectError),'error');return;}
+    const payload={user_id:currentUser.id,subject,topic:$('study-topic').value.trim()||null,activity_type:$('study-activity-type').value||'Estudo / revisão',minutes,questions,correct,notes:$('study-notes').value.trim()||null,studied_on:new Date().toISOString().slice(0,10),...(linkedTopic?{edital_topic_id:linkedTopic}:{})};
     const {error}=await client.from('study_sessions').insert(payload);
     btn.disabled=false;
     if(error){message('Não foi possível salvar. Verifique se executou supabase-schema.sql. '+friendlyError(error),'error');return;}
     if(linkedTopic){await client.from('study_edital_topics').update({status:'studying'}).eq('id',linkedTopic).eq('user_id',currentUser.id).eq('status','pending');if(activeEditalId)await openEdital(activeEditalId);}
-    $('session-form').reset();$('study-topic-select').value='';$('study-questions').value='0';$('study-correct').value='0';stopTimer(true);message('Sessão salva com segurança!','success');await loadHistory();
+    $('session-form').reset();$('study-topic-select').value='';$('study-activity-type').value='Estudo / revisão';$('study-questions').value='0';$('study-correct').value='0';stopTimer(true);message('Sessão salva com segurança!','success');await loadHistory();
   });
   function paintTimer(){$('timer-display').textContent=fmt(elapsed+(startedAt?Math.floor((Date.now()-startedAt)/1000):0));}
   function startTimer(){if(startedAt)return;startedAt=Date.now();ticker=setInterval(paintTimer,1000);$('timer-start').disabled=true;$('timer-pause').disabled=false;}
