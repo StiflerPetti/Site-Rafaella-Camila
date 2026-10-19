@@ -89,12 +89,55 @@ body.study-page{margin:0;min-height:100vh;background:#fdfaf7;color:var(--ink);fo
 
 .study-page .history-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px}
 .study-page .history-head h3{margin:0;font-family:'Playfair Display',serif;font-size:1.3rem}
-.study-page #study-history{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:14px}
 
+/* Correção Definitiva do Histórico (Lado a Lado / Grid) */
+.study-page #study-history{
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  margin-top: 14px !important;
+  align-items: stretch !important;
+}
+.study-page #study-history > div{
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  padding: 12px 10px !important;
+  background: #fcf9ff !important;
+  border: 1px solid #eee2f8 !important;
+  border-radius: 14px !important;
+  font-size: .8rem !important;
+}
+.study-page #study-history .chart-empty{
+  grid-column: 1 / -1 !important;
+  text-align: center;
+  padding: 20px;
+}
+
+/* Gráficos e Analytics */
 .study-page .analytics-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
 .study-page .analytics-title{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
 .study-page .analytics-title h3{margin:0 0 4px;font-size:1.2rem;font-family:'Playfair Display',serif}
 .study-page .chart-icon{display:grid;width:40px;height:40px;place-items:center;border-radius:12px;background:#f4eaff;color:#7951bd;font-size:1.1rem}
+
+/* Correção do Gráfico de Consistência Semanal (Barras Horizontais / Verticais adequadas) */
+.study-page .weekly-chart{
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  align-items: flex-end !important;
+  gap: 10px !important;
+  height: 180px !important;
+  min-height: 180px !important;
+  padding-top: 10px !important;
+  border-top: 1px solid #f0e7f8 !important;
+}
+.study-page .weekly-chart .chart-day{
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  height: 100% !important;
+}
 
 .study-page .performance-numbers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px}
 .study-page .performance-numbers>div{padding:14px;background:#fcf9ff;border:1px solid #eee2f8;border-radius:14px}
@@ -108,11 +151,11 @@ body.study-page{margin:0;min-height:100vh;background:#fdfaf7;color:var(--ink);fo
 .study-page .vertical-ranking-chart{
   display: flex !important;
   align-items: flex-end !important;
-  justify-content: space-around !important;
+  justify-content: space-between !important;
   gap: 16px !important;
-  height: 220px !important;
-  min-height: 220px !important;
-  padding: 20px 10px 10px !important;
+  height: 260px !important;
+  min-height: 260px !important;
+  padding: 24px 16px 12px !important;
   border-top: 1px solid #f0e7f8 !important;
   margin-top: 16px !important;
   overflow-x: auto;
@@ -123,12 +166,14 @@ body.study-page{margin:0;min-height:100vh;background:#fdfaf7;color:var(--ink);fo
   align-items: center !important;
   justify-content: flex-end !important;
   height: 100% !important;
-  flex: 1;
-  min-width: 65px;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  padding: 0 !important;
+  flex: 1 1 0;
+  min-width: 90px;
+  max-width: 140px;
+  background: #fcf9ff !important;
+  border: 1px solid #eee2f8 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 4px 12px rgba(83,55,125,.03) !important;
+  padding: 12px 8px !important;
 }
 .study-page .vertical-ranking-chart .ranking-row-head{
   display: flex !important;
@@ -137,36 +182,40 @@ body.study-page{margin:0;min-height:100vh;background:#fdfaf7;color:var(--ink);fo
   width: 100% !important;
   height: 100% !important;
   justify-content: flex-end !important;
-  gap: 6px;
+  gap: 8px;
 }
 .study-page .vertical-ranking-chart .ranking-position,
 .study-page .vertical-ranking-chart .ranking-row-head b{
-  display: none !important; /* Limpa elementos antigos para focar na barra */
+  display: none !important;
 }
 .study-page .vertical-ranking-chart .ranking-row-head strong{
-  font-size: .75rem !important;
+  font-size: .8rem !important;
   text-align: center !important;
-  color: var(--muted) !important;
-  max-width: 80px;
+  color: var(--ink) !important;
+  font-weight: 600;
+  line-height: 1.25;
+  width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   margin-top: 8px;
 }
 .study-page .vertical-ranking-chart .ranking-track{
   display: flex !important;
   align-items: flex-end !important;
   justify-content: center !important;
-  width: 32px !important;
-  height: 140px !important;
-  background: #f4ebff !important;
+  width: 36px !important;
+  height: 150px !important;
+  background: #f1e6ff !important;
   border-radius: 12px 12px 6px 6px !important;
   overflow: hidden;
 }
 .study-page .vertical-ranking-chart .ranking-track span{
   display: block !important;
   width: 100% !important;
-  min-height: 8px !important;
+  min-height: 10px !important;
   border-radius: 10px 10px 4px 4px !important;
   background: linear-gradient(180deg, #e45ca4 0%, #8054c7 100%) !important;
   transition: height .3s ease;
@@ -183,7 +232,10 @@ body.study-page{margin:0;min-height:100vh;background:#fdfaf7;color:var(--ink);fo
 .primary:hover{background:var(--purple-dark)}
 .secondary{background:#fff;border:1px solid var(--line);color:var(--purple-dark)}
 
-/* Responsividade para Celulares */
+/* Responsividade para Celulares e Tablets */
+@media(max-width:1100px){
+  .study-page #study-history{grid-template-columns:repeat(4, minmax(0, 1fr)) !important;}
+}
 @media(max-width:900px){
   .study-page .study-app{grid-template-columns:1fr;padding:14px}
   .study-page .study-sidebar{position:static;min-height:0;width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;padding:12px}
@@ -193,5 +245,6 @@ body.study-page{margin:0;min-height:100vh;background:#fdfaf7;color:var(--ink);fo
   .study-page .focus-wrapper{grid-template-columns:1fr}
   .study-page .focus-timer-panel{border-right:0;border-bottom:1px solid var(--line);padding-right:0;padding-bottom:20px}
   .study-page .analytics-grid,
-  .study-page .study-stats{grid-template-columns:1fr !important}
+  .study-page .study-stats,
+  .study-page #study-history{grid-template-columns:repeat(2, minmax(0, 1fr)) !important;}
 }
