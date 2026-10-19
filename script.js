@@ -35,7 +35,7 @@ if (menuToggle && navMenu) {
   const showAuth = () => { currentUser=null; panel.hidden=false; dashboard.hidden=true; };
   async function loadHistory(){
     if(!client||!currentUser)return;
-    const {data,error}=await client.from('study_sessions').select('id,subject,topic,activity_type,minutes,questions,correct,notes,studied_on,created_at').eq('user_id',currentUser.id).order('studied_on',{ascending:false}).order('created_at',{ascending:false}).limit(50);
+    const {data,error}=await client.from('study_sessions').select('id,subject,topic,activity_type,minutes,questions,correct,performance_reported,notes,studied_on,created_at').eq('user_id',currentUser.id).order('studied_on',{ascending:false}).order('created_at',{ascending:false});
     if(error){$('study-history').textContent='Não foi possível carregar o histórico: '+friendlyError(error);return;}
     const sessions=data||[];
     const {data:catalogData} = await client.from('study_subjects').select('name').eq('user_id',currentUser.id).order('name');
@@ -52,8 +52,9 @@ if (menuToggle && navMenu) {
     const totalMinutes=sessions.reduce((sum,x)=>sum+(Number(x.minutes)||0),0);
     $('total-time').textContent=Math.floor(totalMinutes/60)+'h '+String(totalMinutes%60).padStart(2,'0')+'min';
     $('total-sessions').textContent=String(sessions.length);
-    const totalQuestions=sessions.reduce((sum,x)=>sum+(Number(x.questions)||0),0);
-    const totalCorrect=sessions.reduce((sum,x)=>sum+(Number(x.correct)||0),0);
+    const measuredSessions=sessions.filter(x=>x.performance_reported!==false);
+    const totalQuestions=measuredSessions.reduce((sum,x)=>sum+(Number(x.questions)||0),0);
+    const totalCorrect=measuredSessions.reduce((sum,x)=>sum+(Number(x.correct)||0),0);
     $('total-questions').textContent=String(totalQuestions);
     $('chart-questions').textContent=totalQuestions.toLocaleString('pt-BR');
     const accuracy=totalQuestions ? Math.min(100,Math.round(totalCorrect/totalQuestions*100)) : 0;
@@ -88,7 +89,7 @@ if (menuToggle && navMenu) {
     }
     const history=$('study-history'); history.replaceChildren();
     if(!sessions.length){const p=document.createElement('p');p.textContent='Ainda não há sessões registradas. Sua primeira sessão começa aqui!';history.append(p);return;}
-    sessions.forEach(x=>{const card=document.createElement('article');card.className='history-item';const h=document.createElement('h4');h.textContent=x.subject;const date=document.createElement('small');date.textContent=new Date(x.studied_on+'T12:00:00').toLocaleDateString('pt-BR');const details=document.createElement('p');details.textContent=`${x.minutes} min · ${x.activity_type||'Estudo / revisão'} · ${x.questions||0} questões · ${x.correct||0} acertos${x.topic?' · '+x.topic:''}`;card.append(h,date,details);if(x.notes){const n=document.createElement('p');n.textContent=x.notes;card.append(n);}history.append(card);});
+    sessions.forEach(x=>{const card=document.createElement('article');card.className='history-item';const h=document.createElement('h4');h.textContent=x.subject;const date=document.createElement('small');date.textContent=new Date(x.studied_on+'T12:00:00').toLocaleDateString('pt-BR');const details=document.createElement('p');details.textContent=`${x.minutes} min · ${x.activity_type||'Estudo / revisão'} · ${x.performance_reported===false?'questões/acertos não informados':`${x.questions||0} questões · ${x.correct||0} acertos`}${x.topic?' · '+x.topic:''}`;card.append(h,date,details);if(x.notes){const n=document.createElement('p');n.textContent=x.notes;card.append(n);}history.append(card);});
   }
   // Planejador de edital. A extração acontece localmente no navegador; apenas o texto revisado e os tópicos são enviados ao Supabase.
   let activeEditalId = null;
@@ -295,7 +296,7 @@ if (menuToggle && navMenu) {
     const linkedTopic=$('study-topic-select')?.value||null;const subject=$('study-subject').value.trim();
     const {error:subjectError}=await client.from('study_subjects').upsert({user_id:currentUser.id,name:subject},{onConflict:'user_id,name',ignoreDuplicates:true});
     if(subjectError){btn.disabled=false;message('Não foi possível atualizar o cadastro de matérias. '+friendlyError(subjectError),'error');return;}
-    const payload={user_id:currentUser.id,subject,topic:$('study-topic').value.trim()||null,activity_type:$('study-activity-type').value||'Estudo / revisão',minutes,questions,correct,notes:$('study-notes').value.trim()||null,studied_on:new Date().toISOString().slice(0,10),...(linkedTopic?{edital_topic_id:linkedTopic}:{})};
+    const payload={user_id:currentUser.id,subject,topic:$('study-topic').value.trim()||null,activity_type:$('study-activity-type').value||'Estudo / revisão',minutes,questions,correct,performance_reported:true,notes:$('study-notes').value.trim()||null,studied_on:new Date().toISOString().slice(0,10),...(linkedTopic?{edital_topic_id:linkedTopic}:{})};
     const {error}=await client.from('study_sessions').insert(payload);
     btn.disabled=false;
     if(error){message('Não foi possível salvar. Verifique se executou supabase-schema.sql. '+friendlyError(error),'error');return;}
