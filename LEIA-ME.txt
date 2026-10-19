@@ -1,0 +1,13 @@
+CORREÇÃO DE LAYOUT — RAFAELLA
+
+Esta versão corrige a mistura entre o layout antigo e o novo.
+
+No GitHub, substitua SOMENTE estes dois arquivos pelos arquivos deste pacote:
+- estudos.html
+- estilo.css
+
+Não substitua script.js nem supabase-config.js.
+
+A atualização mantém os IDs usados pelo JavaScript e pelo Supabase, organiza a ordem visual para mostrar cronômetro e formulário primeiro, indicadores e histórico em seguida, e planejamento/edital no final. O cronômetro fica com números maiores.
+
+Depois do commit, aguarde a publicação e atualize o site com Ctrl+F5.
