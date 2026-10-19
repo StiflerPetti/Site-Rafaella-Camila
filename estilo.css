@@ -731,3 +731,71 @@ body.study-page{margin:0;min-height:100vh;background:linear-gradient(135deg,#fff
   .study-page #study-history { grid-template-columns: 1fr !important; }
   .study-page #subject-ranking .ranking-row-head { grid-template-columns: 30px minmax(0, 1fr) auto !important; }
 }
+
+/* Correção isolada do gráfico semanal — adicionar ao FINAL de estilo.css */
+.study-page #weekly-chart.weekly-chart {
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  align-items: stretch !important;
+  gap: 12px !important;
+  min-height: 190px !important;
+  height: 190px !important;
+  padding: 14px 2px 0 !important;
+  overflow: visible !important;
+}
+.study-page #weekly-chart .chart-day {
+  display: grid !important;
+  grid-template-rows: 22px minmax(90px, 1fr) 22px !important;
+  align-items: end !important;
+  justify-items: center !important;
+  gap: 7px !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.study-page #weekly-chart .chart-value {
+  display: block !important;
+  width: 100% !important;
+  color: #6f4aa8 !important;
+  font-size: .72rem !important;
+  line-height: 1.2 !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+.study-page #weekly-chart .chart-bar-track {
+  display: flex !important;
+  align-items: end !important;
+  justify-content: center !important;
+  width: min(100%, 34px) !important;
+  height: 100% !important;
+  min-height: 90px !important;
+  overflow: hidden !important;
+  border-radius: 10px 10px 5px 5px !important;
+  background: #f1e8fa !important;
+}
+.study-page #weekly-chart .chart-bar {
+  display: block !important;
+  width: 100% !important;
+  min-height: 4px !important;
+  border-radius: 9px 9px 4px 4px !important;
+  background: linear-gradient(180deg, #e45ca4 0%, #8054c7 100%) !important;
+  transition: height .25s ease !important;
+}
+.study-page #weekly-chart .chart-day small {
+  display: block !important;
+  width: 100% !important;
+  color: #766a83 !important;
+  font-size: .72rem !important;
+  line-height: 1.2 !important;
+  text-align: center !important;
+  text-transform: capitalize !important;
+}
+@media (max-width: 560px) {
+  .study-page #weekly-chart.weekly-chart { gap: 5px !important; }
+  .study-page #weekly-chart .chart-value,
+  .study-page #weekly-chart .chart-day small { font-size: .64rem !important; }
+}
