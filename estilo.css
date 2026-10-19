@@ -846,3 +846,120 @@ body.study-page{margin:0;min-height:100vh;background:linear-gradient(135deg,#fff
 @media(max-width:1100px){.study-page #study-history{grid-template-columns:repeat(4,minmax(0,1fr))}.study-page .study-app{grid-template-columns:190px minmax(0,1fr);gap:16px}}
 @media(max-width:760px){.study-page .study-app{grid-template-columns:1fr;padding:14px;gap:16px}.study-page .study-sidebar{position:static;min-height:0;width:100%}.study-page .analytics-grid{grid-template-columns:1fr}.study-page #study-history{grid-template-columns:repeat(2,minmax(0,1fr))}.study-page .study-stats{grid-template-columns:1fr}.study-page #subject-ranking{grid-template-columns:1fr!important}}
 @media(max-width:430px){.study-page #study-history{grid-template-columns:1fr}.study-page #study-history .daily-history-item{min-height:0}.study-page .session-form .focus-layout{grid-template-columns:1fr}}
+
+
+/* === REVISÃO VISUAL: PLANNER / DIÁRIO ROMÂNTICO (SUGESTÃO 3) === */
+/* Fundo mais quente e limpo */
+body.study-page {
+  background: #fdfaf7; /* Off-white acolhedor */
+}
+/* Alinhamento geral do Dashboard */
+.study-page #study-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 24px; /* Espaço uniforme */
+}
+/* Cards Flutuantes (Floating Cards) - Cantos arredondados e sombras suaves */
+.study-page .timer-floating-card,
+.study-page .session-floating-card,
+.study-page .history-floating-card,
+.study-page .edital-floating-card {
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.95); /* Leve glassmorphism */
+  border-radius: 20px;
+  border: 1px solid rgba(120, 83, 189, 0.1); /* Roxo bem leve */
+  box-shadow: 0 10px 30px rgba(83, 55, 125, 0.05); /* Sombra suave */
+}
+/* SEÇÃO 1: Foco e Registro (Grid de 2 Colunas Equilibradas) */
+.study-page .focus-layout {
+  display: block; /* Remove o grid antigo */
+  order: 1; /* Fica no topo */
+}
+.study-page #session-form.focus-wrapper {
+  display: grid;
+  grid-template-columns: minmax(0, 0.75fr) minmax(0, 1fr); /* Equilíbrio perfeito */
+  gap: 24px;
+  align-items: stretch;
+}
+/* Ajuste fino do Painel do Cronômetro à esquerda */
+.study-page .timer-floating-card {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.study-page .timer-box-large #timer-display {
+  font-size: clamp(3.2rem, 5vw, 4.8rem);
+}
+.study-page .timer-orb {
+  width: min(100%, 300px);
+}
+/* SEÇÃO 2: Caminhada e Estatísticas Semanais */
+.study-page .planner-caminhada-row {
+  order: 2; /* Fica no meio */
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+/* Estatísticas Semanais Compactas */
+.study-page .planner-stats.study-stats {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.study-page .planner-stats>div {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 16px;
+  border: 1px solid rgba(120, 83, 189, 0.08);
+}
+/* Histórico Semanal Compacto (Grid Lado a Lado em vez de Lista Longa) */
+.study-page #historico.planner-history {
+  padding: 24px;
+  margin: 0;
+}
+.study-page #historico.planner-history .encouragement-card.planner-encouragement {
+  display: none; /* Esconde o card de encorajamento para não roubar espaço */
+}
+.study-page #study-history.planner-history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); /* Distribui os dias lado a lado */
+  gap: 10px;
+  margin-top: 16px;
+}
+.study-page #study-history .ranking-row,
+.study-page #study-history .ranking-row-head {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgba(120, 83, 189, 0.08);
+  border-radius: 12px;
+  background: #fbf8fe;
+}
+.study-page #study-history .ranking-row b,
+.study-page #study-history .ranking-row small {
+  display: none; /* Esconde o contador de questões e o ranking para ficar limpo */
+}
+.study-page #study-history .daily-history-meta {
+  font-size: 0.75rem;
+  color: var(--purple);
+}
+/* SEÇÃO 3: Planejamento Inteligente */
+.study-page .planner-planning {
+  order: 3; /* Fica no final */
+}
+.study-page .edital-floating-card {
+  gap: 16px;
+}
+
+/* Responsividade: Garante que no celular tudo continue funcionando e empilhe */
+@media (max-width: 900px) {
+  .study-page #session-form.focus-wrapper {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 680px) {
+  .study-page #study-history.planner-history-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* Empilha em 2 colunas no celular */
+  }
+}
