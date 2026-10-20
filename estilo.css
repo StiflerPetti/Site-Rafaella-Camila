@@ -859,3 +859,77 @@ body.study-page{margin:0;min-height:100vh;background:linear-gradient(135deg,#fff
 .study-page .ranking-card { order: 5; }
 .study-page .edital-panel { order: 6; }
 @media (max-width: 680px) { .study-page .session-fields-panel { border-left: 0 !important; padding-left: 0 !important; } }
+
+
+
+
+/* Rafaella — cartões compactos para a seção Últimos 7 dias
+   Cole este bloco NO FINAL de estilo.css. Não substitua o CSS existente. */
+.study-page #study-history {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  margin-top: 12px !important;
+  align-items: stretch !important;
+}
+.study-page #study-history .daily-history-item {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+  min-height: 112px !important;
+  padding: 12px 13px !important;
+  margin: 0 !important;
+  border: 1px solid #e9def7 !important;
+  border-radius: 13px !important;
+  background: linear-gradient(145deg, #fff 0%, #fcf8ff 100%) !important;
+  box-shadow: 0 3px 10px rgba(83, 55, 125, .035) !important;
+  text-align: left !important;
+  overflow-wrap: anywhere !important;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.study-page #study-history .daily-history-item:hover {
+  border-color: #cdb5f2 !important;
+  box-shadow: 0 5px 14px rgba(83, 55, 125, .08) !important;
+  transform: translateY(-1px);
+}
+.study-page #study-history .daily-history-item.timeline-current,
+.study-page #study-history .daily-history-item.today,
+.study-page #study-history .daily-history-item.is-today {
+  border-color: #a783e4 !important;
+  background: linear-gradient(145deg, #fff 0%, #f6efff 100%) !important;
+}
+.study-page #study-history .daily-history-item h4 {
+  margin: 0 !important;
+  color: #5f438e !important;
+  font-size: .78rem !important;
+  font-weight: 750 !important;
+  line-height: 1.35 !important;
+}
+.study-page #study-history .daily-history-item p,
+.study-page #study-history .daily-history-subjects {
+  margin: 0 !important;
+  color: #5f536d !important;
+  font-size: .76rem !important;
+  line-height: 1.4 !important;
+}
+.study-page #study-history .daily-history-meta {
+  display: block !important;
+  margin-top: auto !important;
+  padding-top: 4px !important;
+  color: #7951bd !important;
+  font-size: .73rem !important;
+  font-weight: 650 !important;
+  line-height: 1.35 !important;
+}
+.study-page #study-history .chart-empty {
+  grid-column: 1 / -1 !important;
+}
+@media (max-width: 900px) {
+  .study-page #study-history { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 520px) {
+  .study-page #study-history { grid-template-columns: 1fr !important; gap: 8px !important; }
+  .study-page #study-history .daily-history-item { min-height: 0 !important; padding: 11px 12px !important; }
+}
