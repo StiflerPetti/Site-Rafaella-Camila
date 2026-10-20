@@ -123,6 +123,9 @@ if (menuToggle && navMenu) {
   let editalDraft = null;
   let editalTopics = [];
   let editalTopicMinutes = new Map();
+  let editalTopicHistoryMatches = new Map();
+  let editalTopicFilter = 'all';
+  let editalTopicSearch = '';
   const statusLabels = {pending:'Não iniciado', studying:'Estudando', done:'Concluído', review:'Revisar'};
   const editalFeedback = (text, kind='info') => { const el=$('edital-extract-status'); if(el){el.textContent=text;el.className='edital-feedback '+kind;} };
   const safeText = (tag, className, text) => { const el=document.createElement(tag); if(className)el.className=className; el.textContent=text; return el; };
@@ -160,13 +163,19 @@ if (menuToggle && navMenu) {
       reader.readAsDataURL(file);
     });
   }
+  function friendlyEditalAIError(error){
+    const raw=String(error?.message||error||'');
+    if(/high demand|overload|temporarily unavailable|503|429|resource exhausted|capacity/i.test(raw))return 'O servidor de IA está sobrecarregado neste momento. Aguarde alguns minutos e tente novamente. Seu edital e seus dados continuam seguros.';
+    if(/model.*not available|model not found|gemini-2\.5-flash/i.test(raw))return 'O modelo de IA está temporariamente indisponível. Avise o suporte ou tente novamente mais tarde.';
+    return raw||'Não foi possível concluir a análise. Tente novamente em alguns minutos.';
+  }
   async function callEditalAI(action, selectedJob){
     if(!client||!currentUser)throw new Error('Entre na sua conta antes de analisar um edital.');
     if(!editalPdfBase64)throw new Error('Selecione um PDF primeiro.');
     const body={action,pdfBase64:editalPdfBase64,mimeType:'application/pdf',fileName:editalDraft?.filename||'edital.pdf'};
     if(selectedJob)body.selectedJob=selectedJob;
     const {data,error}=await client.functions.invoke('analisar-edital',{body});
-    if(error)throw new Error(error.message||'Não foi possível chamar a função de análise.');
+    if(error){let detail='';try{detail=error.context?.body?.detalhe||error.context?.body?.error||'';}catch{};throw new Error(friendlyEditalAIError(detail||error.message||'Não foi possível chamar a função de análise.'));}
     if(!data?.ok||!data?.result)throw new Error(data?.error||'A IA não retornou uma análise válida.');
     return data.result;
   }
@@ -199,7 +208,7 @@ if (menuToggle && navMenu) {
         $('edital-ai-job-wrap').hidden=true;
         editalFeedback('A IA não conseguiu identificar cargos com segurança. Confira o PDF ou tente um arquivo mais legível. Observações: '+(result.observacoes||[]).join(' '),'error');
       }
-    }catch(err){console.error(err);editalFeedback('Falha ao analisar o edital: '+(err.message||'erro inesperado')+'. Confira se a função está publicada e se GEMINI_API_KEY está configurada.','error');}
+    }catch(err){console.error(err);editalFeedback('Falha ao analisar o edital: '+friendlyEditalAIError(err),'error');}
     finally{if(fileInput)fileInput.disabled=false;}
   });
   $('edital-ai-generate')?.addEventListener('click',async()=>{
@@ -227,7 +236,7 @@ if (menuToggle && navMenu) {
       const notes=Array.isArray(result.observacoes)&&result.observacoes.length?' Observações: '+result.observacoes.join(' '):'';
       editalFeedback(`Plano gerado para ${selectedJob}: ${subjects.length} matérias e ${rows.length} tópicos. Revise a lista e salve quando estiver correta.${notes}`,'success');
       $('edital-review-wrap').scrollIntoView({behavior:'smooth',block:'start'});
-    }catch(err){console.error(err);editalFeedback('Não foi possível gerar o plano: '+(err.message||'erro inesperado'),'error');}
+    }catch(err){console.error(err);editalFeedback('Não foi possível gerar o plano: '+friendlyEditalAIError(err),'error');}
     finally{btn.disabled=false;}
   });
     $('cancel-edital-review')?.addEventListener('click',()=>{$('edital-review-wrap').hidden=true;editalDraft=null;});
@@ -283,19 +292,92 @@ if (menuToggle && navMenu) {
     }
   });
   $('study-topic-select')?.addEventListener('change',()=>{const opt=$('study-topic-select').selectedOptions[0];if(opt?.value){const subjectSelect=$('study-subject');const name=opt.dataset.subject||'';if(name&&!Array.from(subjectSelect.options).some(o=>o.value===name)){const option=document.createElement('option');option.value=name;option.textContent=name;subjectSelect.insertBefore(option,subjectSelect.querySelector('option[value="__add_subject__"]')||null);}subjectSelect.value=name;$('study-topic').value=opt.dataset.topic||'';}});
+  function normalizeForMatch(value){
+    return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+  }
+  function topicOverlap(a,b){
+    const stop=new Set(['de','da','do','das','dos','e','a','o','as','os','em','no','na','nos','nas','por','para','com','sem','sobre','geral','direito','direitos']);
+    const aa=new Set(normalizeForMatch(a).split(' ').filter(w=>w.length>2&&!stop.has(w)));
+    const bb=new Set(normalizeForMatch(b).split(' ').filter(w=>w.length>2&&!stop.has(w)));
+    if(!aa.size||!bb.size)return 0;
+    let common=0;aa.forEach(w=>{if(bb.has(w))common++;});
+    return common/Math.max(aa.size,bb.size);
+  }
   async function openEdital(id){
     const {data:ed,error}=await client.from('study_editals').select('id,title').eq('id',id).eq('user_id',currentUser.id).single();
     if(error){editalFeedback('Não foi possível abrir o edital: '+friendlyError(error),'error');return;}
     const {data:topics,error:topicError}=await client.from('study_edital_topics').select('id,edital_id,subject,topic,status,notes,sort_order,last_reviewed_at').eq('edital_id',id).eq('user_id',currentUser.id).order('sort_order',{ascending:true});
     if(topicError){editalFeedback('Não foi possível carregar os tópicos: '+friendlyError(topicError),'error');return;}
-    activeEditalId=id;editalTopics=topics||[];editalTopicMinutes=new Map();if(editalTopics.length){const ids=editalTopics.map(t=>t.id);const {data:sessions}=await client.from('study_sessions').select('edital_topic_id,minutes').eq('user_id',currentUser.id).in('edital_topic_id',ids);(sessions||[]).forEach(x=>editalTopicMinutes.set(x.edital_topic_id,(editalTopicMinutes.get(x.edital_topic_id)||0)+(Number(x.minutes)||0)));}$('edital-topics-panel').hidden=false;$('active-edital-title').textContent=ed.title;renderEditalTopics();refreshTopicSelector(editalTopics);await loadEditals();
+    activeEditalId=id;editalTopics=topics||[];editalTopicMinutes=new Map();editalTopicHistoryMatches=new Map();
+    if(editalTopics.length){
+      const ids=editalTopics.map(t=>t.id);
+      const {data:linkedSessions}=await client.from('study_sessions').select('edital_topic_id,subject,topic,minutes,studied_on').eq('user_id',currentUser.id).in('edital_topic_id',ids);
+      (linkedSessions||[]).forEach(x=>editalTopicMinutes.set(x.edital_topic_id,(editalTopicMinutes.get(x.edital_topic_id)||0)+(Number(x.minutes)||0)));
+      // Compare older, unlinked study records conservatively. Matches are suggestions only and never change checklist status.
+      const {data:historySessions}=await client.from('study_sessions').select('subject,topic,minutes,studied_on,edital_topic_id').eq('user_id',currentUser.id).is('edital_topic_id',null).order('studied_on',{ascending:false}).limit(1500);
+      const history=historySessions||[];
+      editalTopics.forEach(t=>{
+        const candidates=history.filter(s=>normalizeForMatch(s.subject)===normalizeForMatch(t.subject)&&String(s.topic||'').trim().length>2)
+          .map(s=>({...s,score:topicOverlap(s.topic,t.topic)})).filter(s=>s.score>=0.55).sort((a,b)=>b.score-a.score);
+        if(candidates.length)editalTopicHistoryMatches.set(t.id,candidates.slice(0,5));
+      });
+    }
+    $('edital-topics-panel').hidden=false;$('active-edital-title').textContent=ed.title;
+    const search=$('edital-topic-search');if(search)search.value='';editalTopicSearch='';editalTopicFilter='all';const filter=$('edital-topic-filter');if(filter)filter.value='all';
+    renderEditalTopics();refreshTopicSelector(editalTopics);await loadEditals();
   }
+  $('edital-topic-search')?.addEventListener('input',e=>{editalTopicSearch=normalizeForMatch(e.target.value);renderEditalTopics();});
+  $('edital-topic-filter')?.addEventListener('change',e=>{editalTopicFilter=e.target.value;renderEditalTopics();});
   function renderEditalTopics(){
-    const list=$('edital-topic-list');list.replaceChildren();const done=editalTopics.filter(t=>t.status==='done').length;const pct=editalTopics.length?Math.round(done/editalTopics.length*100):0;$('edital-progress-label').textContent=pct+'%';$('edital-progress-bar').style.width=pct+'%';
-    if(!editalTopics.length){list.append(safeText('p','chart-empty','Este edital ainda não tem tópicos.'));return;}
-    const groups=new Map();editalTopics.forEach(t=>{if(!groups.has(t.subject))groups.set(t.subject,[]);groups.get(t.subject).push(t);});
-    for(const [subject,topics] of groups){const group=document.createElement('section');group.className='edital-subject-group';const h=safeText('h5','',subject);const count=safeText('span','topic-count',`${topics.filter(t=>t.status==='done').length}/${topics.length} concluídos`);const head=document.createElement('div');head.className='saved-edital-head';head.style.marginTop='0';head.style.paddingTop='0';head.style.borderTop='0';head.append(h,count);group.append(head);
-      topics.forEach(t=>{const row=document.createElement('div');row.className='edital-topic-row';const nameWrap=document.createElement('div');nameWrap.className='edital-topic-name-wrap';const name=safeText('div','edital-topic-name',t.topic);const mins=editalTopicMinutes.get(t.id)||0;const timeLabel=safeText('small','edital-topic-time',mins?`Tempo registrado: ${Math.floor(mins/60)}h ${String(mins%60).padStart(2,'0')}min`:'Ainda sem tempo registrado');nameWrap.append(name,timeLabel);const select=document.createElement('select');select.className='edital-topic-status status-'+t.status;select.setAttribute('aria-label','Status: '+t.topic);Object.entries(statusLabels).forEach(([value,label])=>{const opt=document.createElement('option');opt.value=value;opt.textContent=label;select.append(opt);});select.value=t.status;select.addEventListener('change',async()=>{select.disabled=true;const patch={status:select.value,last_reviewed_at:select.value==='review'?new Date().toISOString():t.last_reviewed_at};const {error}=await client.from('study_edital_topics').update(patch).eq('id',t.id).eq('user_id',currentUser.id);select.disabled=false;if(error){select.value=t.status;editalFeedback('Não foi possível atualizar o tópico: '+friendlyError(error),'error');return;}t.status=patch.status;t.last_reviewed_at=patch.last_reviewed_at;select.className='edital-topic-status status-'+t.status;renderEditalTopics();refreshTopicSelector(editalTopics);});row.append(nameWrap,select);group.append(row);});
+    const list=$('edital-topic-list');if(!list)return;list.replaceChildren();
+    const done=editalTopics.filter(t=>t.status==='done').length;
+    const studying=editalTopics.filter(t=>t.status==='studying').length;
+    const pending=editalTopics.filter(t=>t.status==='pending'||t.status==='review').length;
+    const pct=editalTopics.length?Math.round(done/editalTopics.length*100):0;
+    $('edital-progress-label').textContent=pct+'%';$('edital-progress-bar').style.width=pct+'%';
+    if($('edital-done-count'))$('edital-done-count').textContent=String(done);
+    if($('edital-studying-count'))$('edital-studying-count').textContent=String(studying);
+    if($('edital-pending-count'))$('edital-pending-count').textContent=String(pending);
+    if(!editalTopics.length){list.append(safeText('p','edital-empty-filter','Este edital ainda não tem tópicos.'));return;}
+    const filtered=editalTopics.filter(t=>{
+      const haystack=normalizeForMatch(t.subject+' '+t.topic);
+      if(editalTopicSearch&&!haystack.includes(editalTopicSearch))return false;
+      if(editalTopicFilter==='history'&&!editalTopicHistoryMatches.has(t.id)&&!editalTopicMinutes.get(t.id))return false;
+      if(['pending','studying','review','done'].includes(editalTopicFilter)&&t.status!==editalTopicFilter)return false;
+      return true;
+    });
+    if(!filtered.length){list.append(safeText('p','edital-empty-filter','Nenhum tópico corresponde à busca ou ao filtro selecionado.'));return;}
+    const groups=new Map();filtered.forEach(t=>{if(!groups.has(t.subject))groups.set(t.subject,[]);groups.get(t.subject).push(t);});
+    for(const [subject,topics] of groups){
+      const allInSubject=editalTopics.filter(t=>t.subject===subject);const subjectDone=allInSubject.filter(t=>t.status==='done').length;const subjectPct=allInSubject.length?Math.round(subjectDone/allInSubject.length*100):0;
+      const group=document.createElement('section');group.className='edital-subject-group';
+      const head=document.createElement('button');head.type='button';head.className='edital-subject-heading';head.setAttribute('aria-expanded','true');
+      const main=document.createElement('div');main.className='subject-heading-main';main.append(safeText('h5','',subject));
+      const track=document.createElement('div');track.className='edital-subject-progress-track';const fill=document.createElement('span');fill.style.width=subjectPct+'%';track.append(fill);main.append(track);
+      const count=safeText('span','topic-count',`${subjectDone}/${allInSubject.length} concluídos`);const chevron=safeText('span','edital-subject-chevron','⌄');chevron.setAttribute('aria-hidden','true');head.append(main,count,chevron);
+      const body=document.createElement('div');body.className='edital-subject-body';head.addEventListener('click',()=>{const collapsed=group.classList.toggle('is-collapsed');body.hidden=collapsed;head.setAttribute('aria-expanded',String(!collapsed));});group.append(head,body);
+      topics.forEach(t=>{
+        const row=document.createElement('div');row.className='edital-topic-row';
+        const nameWrap=document.createElement('div');nameWrap.className='edital-topic-name-wrap';
+        nameWrap.append(safeText('div','edital-topic-name',t.topic));
+        const mins=editalTopicMinutes.get(t.id)||0;
+        nameWrap.append(safeText('small','edital-topic-time',mins?`Tempo registrado neste tópico: ${Math.floor(mins/60)}h ${String(mins%60).padStart(2,'0')}min`:'Ainda sem tempo vinculado a este tópico'));
+        const matches=editalTopicHistoryMatches.get(t.id)||[];
+        if(matches.length){
+          const matchMinutes=matches.reduce((sum,s)=>sum+(Number(s.minutes)||0),0);
+          const badge=safeText('span','edital-history-match possible',`◷ Possível relação com ${matches.length} ${matches.length===1?'registro antigo':'registros antigos'} · ${matchMinutes} min`);
+          badge.title='Sugestão por semelhança entre matéria e assunto registrado. Confira antes de atualizar o status.';nameWrap.append(badge);
+        } else if(mins){nameWrap.append(safeText('span','edital-history-match','✓ Há sessões vinculadas a este tópico'));}
+        const select=document.createElement('select');select.className='edital-topic-status status-'+t.status;select.setAttribute('aria-label','Status: '+t.topic);
+        Object.entries(statusLabels).forEach(([value,label])=>{const opt=document.createElement('option');opt.value=value;opt.textContent=label;select.append(opt);});select.value=t.status;
+        select.addEventListener('change',async()=>{
+          const previous=t.status;select.disabled=true;const patch={status:select.value,last_reviewed_at:select.value==='review'?new Date().toISOString():t.last_reviewed_at};
+          const {error}=await client.from('study_edital_topics').update(patch).eq('id',t.id).eq('user_id',currentUser.id);select.disabled=false;
+          if(error){select.value=previous;editalFeedback('Não foi possível atualizar o tópico: '+friendlyError(error),'error');return;}
+          t.status=patch.status;t.last_reviewed_at=patch.last_reviewed_at;select.className='edital-topic-status status-'+t.status;renderEditalTopics();refreshTopicSelector(editalTopics);
+        });
+        row.append(nameWrap,select);body.append(row);
+      });
       list.append(group);
     }
   }

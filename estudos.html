@@ -1,5 +1,43 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f7f0ff"><title>Meu cantinho de estudos | Rafaella</title><link rel="stylesheet" href="estilo.css"></head>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f7f0ff"><title>Meu cantinho de estudos | Rafaella</title><link rel="stylesheet" href="estilo.css"><style>
+/* Checklist do edital — acabamento visual responsivo */
+.edital-topics-panel{margin-top:1.5rem;padding:clamp(1rem,2.5vw,1.75rem);background:linear-gradient(145deg,#fff 0%,#fdf9ff 100%);border:1px solid #eadcf8;border-radius:22px;box-shadow:0 14px 36px rgba(103,65,148,.08)}
+.topics-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:.8rem}
+.topics-panel-head h4{margin:.2rem 0 .35rem;font-size:clamp(1.1rem,2vw,1.45rem);line-height:1.35}
+.edital-progress-label{display:grid;place-items:center;min-width:58px;height:58px;border-radius:50%;background:#f2e8ff;color:#6f42a5;font-weight:800;font-size:1.05rem;border:4px solid #e0c9fb}
+.edital-progress-track,.edital-subject-progress-track{height:9px;background:#eee6f6;border-radius:999px;overflow:hidden}
+.edital-progress-track{margin:1rem 0 1.25rem}
+.edital-progress-track span,.edital-subject-progress-track span{display:block;height:100%;width:0;background:linear-gradient(90deg,#a879df,#d88ec8);border-radius:inherit;transition:width .25s ease}
+.edital-checklist-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.75rem;margin:1rem 0}
+.edital-summary-card{padding:.9rem 1rem;background:#fff;border:1px solid #eee3f8;border-radius:14px;min-width:0}
+.edital-summary-card span{display:block;color:#766781;font-size:.78rem;margin-bottom:.25rem}
+.edital-summary-card strong{font-size:1.35rem;color:#4e326d}
+.edital-checklist-tools{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,.35fr);gap:.65rem;margin:1rem 0 1.2rem}
+.edital-checklist-tools input,.edital-checklist-tools select{width:100%;min-width:0;border:1px solid #e4d5f1;border-radius:12px;background:#fff;padding:.75rem .85rem;color:#352344;font:inherit}
+.edital-subject-group{margin:1rem 0;background:#fff;border:1px solid #eadff3;border-radius:16px;overflow:hidden}
+.edital-subject-heading{display:flex;align-items:center;gap:.8rem;width:100%;padding:1rem 1.1rem;border:0;background:#f8f1ff;color:#3f2b54;text-align:left;cursor:pointer;font:inherit}
+.edital-subject-heading:hover{background:#f3e7ff}
+.edital-subject-heading .subject-heading-main{flex:1;min-width:0}
+.edital-subject-heading h5{font-size:1rem;margin:0 0 .45rem;overflow-wrap:anywhere}
+.edital-subject-heading .topic-count{font-size:.8rem;color:#72578c;white-space:nowrap}
+.edital-subject-progress-track{height:5px;max-width:260px}
+.edital-subject-chevron{color:#8a60b6;font-size:1.1rem;transition:transform .2s}
+.edital-subject-group.is-collapsed .edital-subject-chevron{transform:rotate(-90deg)}
+.edital-subject-body{padding:.35rem .85rem .8rem}
+.edital-topic-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(145px,190px);gap:1rem;align-items:center;padding:1rem .3rem;border-bottom:1px solid #f0e8f6}
+.edital-topic-row:last-child{border-bottom:0}
+.edital-topic-name{font-size:.94rem;line-height:1.65;color:#342442;overflow-wrap:anywhere}
+.edital-topic-time{display:block;margin-top:.35rem;color:#897a94;font-size:.78rem;line-height:1.5}
+.edital-history-match{display:inline-flex;align-items:center;gap:.3rem;margin-top:.45rem;padding:.25rem .55rem;border-radius:999px;background:#edf8f0;color:#287747;font-size:.74rem;line-height:1.4}
+.edital-history-match.possible{background:#fff5df;color:#805b13}
+.edital-topic-status{width:100%;padding:.7rem .75rem;border:1px solid #e4d5f1;border-radius:11px;background:#fff;color:#4d3562;font:inherit;font-size:.84rem}
+.edital-topic-status.status-done{border-color:#b6dfc2;background:#f0faf3;color:#246b3b}
+.edital-topic-status.status-studying{border-color:#c9b1ee;background:#f7f1ff}
+.edital-topic-status.status-review{border-color:#f0d49b;background:#fff9ed}
+.edital-empty-filter{padding:1.5rem;text-align:center;color:#82728e;background:#fff;border:1px dashed #dfcceb;border-radius:14px}
+.edital-checklist-note{margin:.8rem 0 0;color:#80718c;font-size:.8rem;line-height:1.6}
+@media(max-width:650px){.edital-checklist-summary{grid-template-columns:repeat(3,minmax(0,1fr));gap:.45rem}.edital-summary-card{padding:.7rem}.edital-summary-card strong{font-size:1.1rem}.edital-checklist-tools{grid-template-columns:1fr}.edital-topic-row{grid-template-columns:1fr;gap:.65rem;padding:.9rem .2rem}.edital-topic-status{max-width:none}.edital-subject-heading{padding:.85rem}.topics-panel-head{align-items:center}}
+</style></head>
 <body class="study-page"><header class="study-nav"><a class="logo" href="index.html">Rafaella Camila <span>♡</span></a><div><a class="button secondary" href="index.html">← Voltar ao portfólio</a></div></header>
 <main class="study-app"><aside class="study-sidebar"><div class="sidebar-brand">✿ <span>Meu cantinho<br>de estudos</span></div><div class="sidebar-quote">“Pequenos progressos todos os dias resultam em grandes conquistas.” <b>♡</b></div><a href="#inicio" class="sidebar-link active">⌂ &nbsp; Visão geral</a><a href="#registrar" class="sidebar-link">＋ &nbsp; Registrar estudo</a><a href="#meu-edital" class="sidebar-link">▧ &nbsp; Meu edital</a><a href="#historico" class="sidebar-link">▤ &nbsp; Meu histórico</a></aside>
 <section class="study-main" id="inicio"><div class="study-page-heading"><div><p class="eyebrow">SEU ESPAÇO PRIVADO</p><h1>Olá, Rafaella! <span>♡</span></h1><p>Um passo de cada vez. Vamos focar no que importa hoje?</p></div><div class="today-pill">✧ Seu espaço, seu ritmo</div></div>
@@ -25,7 +63,13 @@
 </div>
 <div id="edital-review-wrap" hidden><label for="edital-topic-text">Conteúdo extraído — revise antes de importar</label><p class="field-help">Uma linha por tópico, no formato <b>Disciplina | tópico</b>. Você pode corrigir, adicionar ou remover linhas.</p><textarea id="edital-topic-text" rows="10" spellcheck="false" placeholder="Língua Portuguesa | Interpretação de textos"></textarea><div class="edital-actions"><button type="button" id="save-edital" class="button primary">Salvar edital e tópicos</button><button type="button" id="cancel-edital-review" class="button secondary">Cancelar</button></div></div>
 <div class="saved-edital-head"><div><h4>Meus editais</h4><p>O progresso fica salvo na sua conta.</p></div><button class="button secondary" type="button" id="reload-editals">Atualizar</button></div><div id="saved-editals" class="saved-editals"><p class="chart-empty">Entre na sua conta para carregar seus editais.</p></div>
-<div id="edital-topics-panel" class="edital-topics-panel" hidden><div class="topics-panel-head"><div><p class="eyebrow">CHECKLIST DO CONTEÚDO</p><h4 id="active-edital-title">Tópicos do edital</h4></div><div id="edital-progress-label" class="edital-progress-label">0%</div></div><div class="edital-progress-track"><span id="edital-progress-bar"></span></div><div id="edital-topic-list" class="edital-topic-list"></div></div>
+<div id="edital-topics-panel" class="edital-topics-panel" hidden>
+<div class="topics-panel-head"><div><p class="eyebrow">CHECKLIST DO CONTEÚDO</p><h4 id="active-edital-title">Tópicos do edital</h4><p class="edital-checklist-note">Seu progresso considera os status que você confirmar. Registros antigos podem sugerir tópicos já estudados, mas não serão marcados como concluídos automaticamente.</p></div><div id="edital-progress-label" class="edital-progress-label">0%</div></div>
+<div class="edital-progress-track"><span id="edital-progress-bar"></span></div>
+<div class="edital-checklist-summary"><div class="edital-summary-card"><span>Concluídos</span><strong id="edital-done-count">0</strong></div><div class="edital-summary-card"><span>Em andamento</span><strong id="edital-studying-count">0</strong></div><div class="edital-summary-card"><span>Pendentes / revisar</span><strong id="edital-pending-count">0</strong></div></div>
+<div class="edital-checklist-tools"><input id="edital-topic-search" type="search" placeholder="Buscar matéria ou tópico…" aria-label="Buscar matéria ou tópico"><select id="edital-topic-filter" aria-label="Filtrar tópicos"><option value="all">Todos os tópicos</option><option value="pending">Não iniciados</option><option value="studying">Em andamento</option><option value="review">Para revisar</option><option value="done">Concluídos</option><option value="history">Com registro no histórico</option></select></div>
+<div id="edital-topic-list" class="edital-topic-list"></div>
+</div>
 </section>
 </div></section></main>
 <footer class="study-footer"><span>Feito com carinho para Rafaella ♡</span><a href="index.html">Voltar ao portfólio</a></footer>
