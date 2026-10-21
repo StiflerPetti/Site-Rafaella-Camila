@@ -54,3 +54,20 @@
 .chips span{background:#f1e8ff;color:#5f3b9e}
 .value-card .icon.lilac{font-family:Arial,sans-serif;font-size:1.55rem}
 @media(max-width:800px){.intro.mission-quote{font-size:.98rem;line-height:1.7}.quote-attribution{margin-top:.55rem}.professional-line{font-size:.86rem}}
+
+
+/* Ajustes finais: retrato mais presente e contato profissional por WhatsApp */
+.hero-visual{height:500px}
+.portrait{width:min(380px,78vw);height:460px;object-position:center 35%}
+.contact{padding-top:90px;padding-bottom:90px}
+.contact-card{max-width:820px;margin:0 auto;padding:clamp(28px,5vw,56px);border:1px solid var(--line);border-radius:30px;background:linear-gradient(145deg,#fff 0%,#fff8fc 58%,#f4edff 100%);box-shadow:var(--shadow)}
+.contact-emblem{display:grid;place-items:center;width:58px;height:58px;margin:0 auto 18px;border-radius:18px;background:var(--lav);color:var(--purple-dark);font-size:2rem}
+.contact-card .eyebrow{margin-bottom:10px}
+.contact-card>p:not(.eyebrow):not(.contact-privacy){max-width:600px;margin:0 auto 25px;color:var(--muted)}
+.contact-actions{display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;margin-top:25px}
+.whatsapp-button{background:#188b58;color:#fff;box-shadow:0 9px 22px #188b5826}
+.whatsapp-button:hover{background:#117647;color:#fff}
+.whatsapp-button svg{width:21px;height:21px;fill:currentColor;flex:none}
+.contact-privacy{margin:16px 0 0;color:var(--muted);font-size:.76rem}
+@media(max-width:800px){.hero-visual{height:350px}.portrait{width:225px;height:295px;border-width:7px}.contact{padding-top:62px;padding-bottom:62px}.contact-card{padding:28px 22px}.contact-actions{align-items:stretch}.contact-actions .button{width:100%}}
+@media(max-width:420px){.hero-visual{height:330px}.portrait{width:205px;height:270px}.contact-card{border-radius:22px;padding:25px 17px}.contact h2{font-size:2rem}}
