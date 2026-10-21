@@ -19,6 +19,23 @@ if (menuToggle && navMenu) {
   if (!status || !panel || !dashboard) return;
   const config = window.SUPABASE_CONFIG || {};
   const configured = config.url && config.anonKey && config.url.startsWith('https://') && !config.url.includes('COLE_AQUI') && !config.anonKey.includes('COLE_AQUI');
+  // Estilos locais para manter os cartões compactos mesmo se só script.js for atualizado.
+  if(!document.getElementById('history-edit-polish')){
+    const historyStyle=document.createElement('style');historyStyle.id='history-edit-polish';historyStyle.textContent=`
+      #study-history .daily-history-item{min-width:0;overflow-wrap:anywhere;box-sizing:border-box}
+      #study-history .daily-history-subjects{overflow-wrap:anywhere;line-height:1.4;margin:.35rem 0}
+      #study-history .daily-history-meta{display:block;line-height:1.4;margin:.4rem 0;color:#6d4b93;font-weight:600}
+      #study-history .history-day-sessions{margin-top:.5rem;border-top:1px solid #eadcf8;padding-top:.4rem}
+      #study-history .history-day-sessions>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;color:#6c3bb0;background:#f6efff;border:1px solid #e6d5fa;border-radius:999px;padding:.32rem .58rem;font-size:.73rem;font-weight:600}
+      #study-history .history-day-sessions>summary::-webkit-details-marker{display:none}
+      #study-history .history-session-list{display:grid;gap:.45rem;margin-top:.5rem}
+      #study-history .history-session-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:.45rem;padding:.5rem;background:rgba(255,255,255,.95);border:1px solid #eadcf8;border-radius:10px;box-sizing:border-box;min-width:0}
+      #study-history .history-session-detail{min-width:0;overflow-wrap:anywhere;font-size:.74rem;line-height:1.4;color:#49345f}
+      #study-history .history-session-edit{appearance:none;border:1px solid #d9c1f1;background:#f4eaff;color:#60359a;border-radius:8px;padding:.32rem .5rem;font-size:.73rem;font-weight:600;cursor:pointer;white-space:nowrap}
+      #study-history .history-session-edit:hover{background:#eaddfa}
+      #study-history .history-session-edit:disabled{opacity:.55;cursor:wait}
+    `;document.head.append(historyStyle);
+  }
   let client = null, mode = 'login', currentUser = null, elapsed = 0, startedAt = null, ticker = null;
   const fmt = seconds => { const h=Math.floor(seconds/3600), m=Math.floor(seconds%3600/60), s=seconds%60; return [h,m,s].map(n=>String(n).padStart(2,'0')).join(':'); };
   const message = (text, kind='info') => { status.textContent=text; status.className='auth-message '+kind; };
@@ -116,32 +133,40 @@ if (menuToggle && navMenu) {
         minutes.textContent='0 min de estudo';
       }
       card.append(heading,subjects,minutes);
-      // Mostra cada sessão do dia e permite corrigir registros já salvos.
+      // Mantém o resumo diário compacto; detalhes das sessões ficam recolhidos.
       const daySessions=sessions.filter(x=>x.studied_on===key);
-      daySessions.forEach(session=>{
-        const line=document.createElement('div');line.className='history-session-row';
-        const detail=document.createElement('span');
-        detail.textContent=`${session.subject||'Sem matéria'}${session.topic?' — '+session.topic:''} · ${Number(session.minutes)||0} min · ${Number(session.questions)||0} questões · ${Number(session.correct)||0} acertos`;
-        const edit=document.createElement('button');edit.type='button';edit.textContent='Editar';edit.className='history-session-edit';
-        edit.addEventListener('click',async()=>{
-          const subject=prompt('Matéria:',session.subject||'');if(subject===null)return;
-          const topic=prompt('Assunto (ex.: DC ou DCIVIL):',session.topic||'');if(topic===null)return;
-          const minutesText=prompt('Minutos estudados:',String(Number(session.minutes)||0));if(minutesText===null)return;
-          const questionsText=prompt('Total de questões:',String(Number(session.questions)||0));if(questionsText===null)return;
-          const correctText=prompt('Total de acertos:',String(Number(session.correct)||0));if(correctText===null)return;
-          const dateText=prompt('Data do estudo (AAAA-MM-DD):',session.studied_on||key);if(dateText===null)return;
-          const mins=Number(minutesText),qs=Number(questionsText),hits=Number(correctText);
-          if(!subject.trim()||!Number.isInteger(mins)||mins<0||!Number.isInteger(qs)||qs<0||!Number.isInteger(hits)||hits<0||hits>qs||!/^\d{4}-\d{2}-\d{2}$/.test(dateText)){
-            alert('Confira os dados. Use números inteiros, acertos não podem superar questões e data no formato AAAA-MM-DD.');return;
-          }
-          edit.disabled=true;
-          const {error:updateError}=await client.from('study_sessions').update({subject:subject.trim(),topic:topic.trim()||null,minutes:mins,questions:qs,correct:hits,studied_on:dateText,performance_reported:true}).eq('id',session.id).eq('user_id',currentUser.id);
-          edit.disabled=false;
-          if(updateError){message('Não foi possível editar a sessão: '+friendlyError(updateError),'error');return;}
-          message('Sessão corrigida. Os totais serão recalculados.','success');await loadHistory();if(activeEditalId)await openEdital(activeEditalId);
+      if(daySessions.length){
+        const details=document.createElement('details');details.className='history-day-sessions';
+        const summary=document.createElement('summary');summary.textContent=`Ver/editar ${daySessions.length} ${daySessions.length===1?'sessão':'sessões'}`;
+        const list=document.createElement('div');list.className='history-session-list';
+        daySessions.forEach(session=>{
+          const line=document.createElement('div');line.className='history-session-row';
+          const detail=document.createElement('div');detail.className='history-session-detail';
+          detail.textContent=`${session.subject||'Sem matéria'}${session.topic?' — '+session.topic:''} · ${Number(session.minutes)||0} min · ${Number(session.questions)||0} questões · ${Number(session.correct)||0} acertos`;
+          const edit=document.createElement('button');edit.type='button';edit.textContent='Editar';edit.className='history-session-edit';
+          edit.addEventListener('click',async()=>{
+            const subject=prompt('Matéria:',session.subject||'');if(subject===null)return;
+            const topic=prompt('Assunto (ex.: DC ou DCIVIL):',session.topic||'');if(topic===null)return;
+            const minutesText=prompt('Minutos estudados:',String(Number(session.minutes)||0));if(minutesText===null)return;
+            const questionsText=prompt('Total de questões:',String(Number(session.questions)||0));if(questionsText===null)return;
+            const correctText=prompt('Total de acertos:',String(Number(session.correct)||0));if(correctText===null)return;
+            const dateText=prompt('Data do estudo (AAAA-MM-DD):',session.studied_on||key);if(dateText===null)return;
+            const mins=Number(minutesText),qs=Number(questionsText),hits=Number(correctText);
+            if(!subject.trim()||!Number.isInteger(mins)||mins<0||!Number.isInteger(qs)||qs<0||!Number.isInteger(hits)||hits<0||hits>qs||!/^\d{4}-\d{2}-\d{2}$/.test(dateText)){
+              alert('Confira os dados. Use números inteiros, acertos não podem superar questões e data no formato AAAA-MM-DD.');return;
+            }
+            const [yy,mm,dd]=dateText.split('-').map(Number);const checkDate=new Date(yy,mm-1,dd);
+            if(checkDate.getFullYear()!==yy||checkDate.getMonth()!==mm-1||checkDate.getDate()!==dd){alert('Essa data não é válida.');return;}
+            edit.disabled=true;
+            const {error:updateError}=await client.from('study_sessions').update({subject:subject.trim(),topic:topic.trim()||null,minutes:mins,questions:qs,correct:hits,studied_on:dateText,performance_reported:true}).eq('id',session.id).eq('user_id',currentUser.id);
+            edit.disabled=false;
+            if(updateError){message('Não foi possível editar a sessão: '+friendlyError(updateError),'error');return;}
+            message('Sessão corrigida. Os totais serão recalculados.','success');await loadHistory();if(activeEditalId)await openEdital(activeEditalId);
+          });
+          line.append(detail,edit);list.append(line);
         });
-        line.append(detail,edit);card.append(line);
-      });
+        details.append(summary,list);card.append(details);
+      }
       history.append(card);
     }
   }
