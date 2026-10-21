@@ -71,3 +71,8 @@
 .contact-privacy{margin:16px 0 0;color:var(--muted);font-size:.76rem}
 @media(max-width:800px){.hero-visual{height:350px}.portrait{width:225px;height:295px;border-width:7px}.contact{padding-top:62px;padding-bottom:62px}.contact-card{padding:28px 22px}.contact-actions{align-items:stretch}.contact-actions .button{width:100%}}
 @media(max-width:420px){.hero-visual{height:330px}.portrait{width:205px;height:270px}.contact-card{border-radius:22px;padding:25px 17px}.contact h2{font-size:2rem}}
+
+/* Destaque da experiência em advocacia privada na linha do tempo */
+.timeline.timeline-horizontal .timeline-lawyer{border-color:#d9c7f1;background:linear-gradient(160deg,#fff 0%,#fbf6ff 100%);box-shadow:0 12px 30px #7853bd18}
+.timeline.timeline-horizontal .timeline-lawyer .timeline-org a{color:var(--purple-dark);text-decoration:underline;text-decoration-color:#c5afe5;text-underline-offset:3px}
+.timeline.timeline-horizontal .timeline-lawyer .timeline-org a:hover{color:#df5798}
