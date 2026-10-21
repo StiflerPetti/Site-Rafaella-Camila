@@ -115,7 +115,34 @@ if (menuToggle && navMenu) {
         subjects.textContent='Nenhum estudo registrado';
         minutes.textContent='0 min de estudo';
       }
-      card.append(heading,subjects,minutes); history.append(card);
+      card.append(heading,subjects,minutes);
+      // Mostra cada sessão do dia e permite corrigir registros já salvos.
+      const daySessions=sessions.filter(x=>x.studied_on===key);
+      daySessions.forEach(session=>{
+        const line=document.createElement('div');line.className='history-session-row';
+        const detail=document.createElement('span');
+        detail.textContent=`${session.subject||'Sem matéria'}${session.topic?' — '+session.topic:''} · ${Number(session.minutes)||0} min · ${Number(session.questions)||0} questões · ${Number(session.correct)||0} acertos`;
+        const edit=document.createElement('button');edit.type='button';edit.textContent='Editar';edit.className='history-session-edit';
+        edit.addEventListener('click',async()=>{
+          const subject=prompt('Matéria:',session.subject||'');if(subject===null)return;
+          const topic=prompt('Assunto (ex.: DC ou DCIVIL):',session.topic||'');if(topic===null)return;
+          const minutesText=prompt('Minutos estudados:',String(Number(session.minutes)||0));if(minutesText===null)return;
+          const questionsText=prompt('Total de questões:',String(Number(session.questions)||0));if(questionsText===null)return;
+          const correctText=prompt('Total de acertos:',String(Number(session.correct)||0));if(correctText===null)return;
+          const dateText=prompt('Data do estudo (AAAA-MM-DD):',session.studied_on||key);if(dateText===null)return;
+          const mins=Number(minutesText),qs=Number(questionsText),hits=Number(correctText);
+          if(!subject.trim()||!Number.isInteger(mins)||mins<0||!Number.isInteger(qs)||qs<0||!Number.isInteger(hits)||hits<0||hits>qs||!/^\d{4}-\d{2}-\d{2}$/.test(dateText)){
+            alert('Confira os dados. Use números inteiros, acertos não podem superar questões e data no formato AAAA-MM-DD.');return;
+          }
+          edit.disabled=true;
+          const {error:updateError}=await client.from('study_sessions').update({subject:subject.trim(),topic:topic.trim()||null,minutes:mins,questions:qs,correct:hits,studied_on:dateText,performance_reported:true}).eq('id',session.id).eq('user_id',currentUser.id);
+          edit.disabled=false;
+          if(updateError){message('Não foi possível editar a sessão: '+friendlyError(updateError),'error');return;}
+          message('Sessão corrigida. Os totais serão recalculados.','success');await loadHistory();if(activeEditalId)await openEdital(activeEditalId);
+        });
+        line.append(detail,edit);card.append(line);
+      });
+      history.append(card);
     }
   }
   // Planejador de edital. A extração acontece localmente no navegador; apenas o texto revisado e os tópicos são enviados ao Supabase.
@@ -405,7 +432,7 @@ if (menuToggle && navMenu) {
     const linkedTopic=$('study-topic-select')?.value||null;const subject=$('study-subject').value.trim();
     const {error:subjectError}=await client.from('study_subjects').upsert({user_id:currentUser.id,name:subject},{onConflict:'user_id,name',ignoreDuplicates:true});
     if(subjectError){btn.disabled=false;message('Não foi possível atualizar o cadastro de matérias. '+friendlyError(subjectError),'error');return;}
-    const payload={user_id:currentUser.id,subject,topic:$('study-topic').value.trim()||null,activity_type:$('study-activity-type').value||'Estudo / revisão',minutes,questions,correct,performance_reported:true,notes:$('study-notes').value.trim()||null,studied_on:new Date().toISOString().slice(0,10),...(linkedTopic?{edital_topic_id:linkedTopic}:{})};
+    const payload={user_id:currentUser.id,subject,topic:$('study-topic').value.trim()||null,activity_type:$('study-activity-type').value||'Estudo / revisão',minutes,questions,correct,performance_reported:true,notes:$('study-notes').value.trim()||null,studied_on:(()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;})(),...(linkedTopic?{edital_topic_id:linkedTopic}:{})};
     const {error}=await client.from('study_sessions').insert(payload);
     btn.disabled=false;
     if(error){message('Não foi possível salvar. Verifique se executou supabase-schema.sql. '+friendlyError(error),'error');return;}
