@@ -31,6 +31,8 @@ if (menuToggle && navMenu) {
       #study-history .history-session-list{display:grid;gap:.45rem;margin-top:.5rem}
       #study-history .history-session-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:.45rem;padding:.5rem;background:rgba(255,255,255,.95);border:1px solid #eadcf8;border-radius:10px;box-sizing:border-box;min-width:0}
       #study-history .history-session-detail{min-width:0;overflow-wrap:anywhere;font-size:.74rem;line-height:1.4;color:#49345f}
+      #study-history .history-session-notes{margin-top:.35rem;padding:.42rem .52rem;border-left:3px solid #cfb4ee;background:#faf6ff;border-radius:0 7px 7px 0;color:#6b587e;font-size:.73rem;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+      #study-history .history-session-notes.empty{color:#9486a1;font-style:italic;background:#fcfaff}
       #study-history .history-session-edit{appearance:none;border:1px solid #d9c1f1;background:#f4eaff;color:#60359a;border-radius:8px;padding:.32rem .5rem;font-size:.73rem;font-weight:600;cursor:pointer;white-space:nowrap}
       #study-history .history-session-edit:hover{background:#eaddfa}
       #study-history .history-session-edit:disabled{opacity:.55;cursor:wait}
@@ -142,7 +144,13 @@ if (menuToggle && navMenu) {
         daySessions.forEach(session=>{
           const line=document.createElement('div');line.className='history-session-row';
           const detail=document.createElement('div');detail.className='history-session-detail';
-          detail.textContent=`${session.subject||'Sem matéria'}${session.topic?' — '+session.topic:''} · ${Number(session.minutes)||0} min · ${Number(session.questions)||0} questões · ${Number(session.correct)||0} acertos`;
+          const facts=document.createElement('div');
+          facts.textContent=`${session.subject||'Sem matéria'}${session.topic?' — '+session.topic:''} · ${Number(session.minutes)||0} min · ${Number(session.questions)||0} questões · ${Number(session.correct)||0} acertos`;
+          const note=document.createElement('div');note.className='history-session-notes';
+          const noteText=String(session.notes||'').trim();
+          note.textContent=noteText?'Anotações: '+noteText:'Sem anotações nesta sessão.';
+          if(!noteText)note.classList.add('empty');
+          detail.append(facts,note);
           const edit=document.createElement('button');edit.type='button';edit.textContent='Editar';edit.className='history-session-edit';
           edit.addEventListener('click',async()=>{
             const subject=prompt('Matéria:',session.subject||'');if(subject===null)return;
@@ -150,6 +158,7 @@ if (menuToggle && navMenu) {
             const minutesText=prompt('Minutos estudados:',String(Number(session.minutes)||0));if(minutesText===null)return;
             const questionsText=prompt('Total de questões:',String(Number(session.questions)||0));if(questionsText===null)return;
             const correctText=prompt('Total de acertos:',String(Number(session.correct)||0));if(correctText===null)return;
+            const notesText=prompt('Anotações desta sessão:',String(session.notes||''));if(notesText===null)return;
             const dateText=prompt('Data do estudo (AAAA-MM-DD):',session.studied_on||key);if(dateText===null)return;
             const mins=Number(minutesText),qs=Number(questionsText),hits=Number(correctText);
             if(!subject.trim()||!Number.isInteger(mins)||mins<0||!Number.isInteger(qs)||qs<0||!Number.isInteger(hits)||hits<0||hits>qs||!/^\d{4}-\d{2}-\d{2}$/.test(dateText)){
@@ -158,7 +167,7 @@ if (menuToggle && navMenu) {
             const [yy,mm,dd]=dateText.split('-').map(Number);const checkDate=new Date(yy,mm-1,dd);
             if(checkDate.getFullYear()!==yy||checkDate.getMonth()!==mm-1||checkDate.getDate()!==dd){alert('Essa data não é válida.');return;}
             edit.disabled=true;
-            const {error:updateError}=await client.from('study_sessions').update({subject:subject.trim(),topic:topic.trim()||null,minutes:mins,questions:qs,correct:hits,studied_on:dateText,performance_reported:true}).eq('id',session.id).eq('user_id',currentUser.id);
+            const {error:updateError}=await client.from('study_sessions').update({subject:subject.trim(),topic:topic.trim()||null,minutes:mins,questions:qs,correct:hits,notes:notesText.trim()||null,studied_on:dateText,performance_reported:true}).eq('id',session.id).eq('user_id',currentUser.id);
             edit.disabled=false;
             if(updateError){message('Não foi possível editar a sessão: '+friendlyError(updateError),'error');return;}
             message('Sessão corrigida. Os totais serão recalculados.','success');await loadHistory();if(activeEditalId)await openEdital(activeEditalId);
