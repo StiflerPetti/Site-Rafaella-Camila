@@ -19,24 +19,60 @@ if (menuToggle && navMenu) {
   if (!status || !panel || !dashboard) return;
   const config = window.SUPABASE_CONFIG || {};
   const configured = config.url && config.anonKey && config.url.startsWith('https://') && !config.url.includes('COLE_AQUI') && !config.anonKey.includes('COLE_AQUI');
-  // Estilos locais para manter os cartões compactos mesmo se só script.js for atualizado.
+  // Estilos locais: cartões compactos e detalhes/anotações em balão flutuante.
   if(!document.getElementById('history-edit-polish')){
     const historyStyle=document.createElement('style');historyStyle.id='history-edit-polish';historyStyle.textContent=`
-      #study-history .daily-history-item{min-width:0;overflow-wrap:anywhere;box-sizing:border-box}
+      #study-history .daily-history-item{min-width:0;overflow:hidden;overflow-wrap:anywhere;box-sizing:border-box}
       #study-history .daily-history-subjects{overflow-wrap:anywhere;line-height:1.4;margin:.35rem 0}
       #study-history .daily-history-meta{display:block;line-height:1.4;margin:.4rem 0;color:#6d4b93;font-weight:600}
-      #study-history .history-day-sessions{margin-top:.5rem;border-top:1px solid #eadcf8;padding-top:.4rem}
-      #study-history .history-day-sessions>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;color:#6c3bb0;background:#f6efff;border:1px solid #e6d5fa;border-radius:999px;padding:.32rem .58rem;font-size:.73rem;font-weight:600}
+      #study-history .history-day-sessions{margin-top:.5rem;border-top:1px solid #eadcf8;padding-top:.4rem;min-width:0}
+      #study-history .history-day-sessions>summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;color:#6c3bb0;background:#f6efff;border:1px solid #e6d5fa;border-radius:999px;padding:.32rem .58rem;font-size:.73rem;font-weight:600;max-width:100%;box-sizing:border-box}
       #study-history .history-day-sessions>summary::-webkit-details-marker{display:none}
-      #study-history .history-session-list{display:grid;gap:.45rem;margin-top:.5rem}
-      #study-history .history-session-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:.45rem;padding:.5rem;background:rgba(255,255,255,.95);border:1px solid #eadcf8;border-radius:10px;box-sizing:border-box;min-width:0}
-      #study-history .history-session-detail{min-width:0;overflow-wrap:anywhere;font-size:.74rem;line-height:1.4;color:#49345f}
-      #study-history .history-session-notes{margin-top:.35rem;padding:.42rem .52rem;border-left:3px solid #cfb4ee;background:#faf6ff;border-radius:0 7px 7px 0;color:#6b587e;font-size:.73rem;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
-      #study-history .history-session-notes.empty{color:#9486a1;font-style:italic;background:#fcfaff}
-      #study-history .history-session-edit{appearance:none;border:1px solid #d9c1f1;background:#f4eaff;color:#60359a;border-radius:8px;padding:.32rem .5rem;font-size:.73rem;font-weight:600;cursor:pointer;white-space:nowrap}
-      #study-history .history-session-edit:hover{background:#eaddfa}
+      #study-history .history-session-list{display:grid;gap:.4rem;margin-top:.5rem;min-width:0}
+      #study-history .history-session-row{display:flex;flex-direction:column;align-items:stretch;gap:.35rem;padding:.45rem;background:rgba(255,255,255,.98);border:1px solid #eadcf8;border-radius:10px;box-sizing:border-box;min-width:0;max-width:100%}
+      #study-history .history-session-detail{display:grid;gap:.15rem;min-width:0;max-width:100%;font-size:.7rem;line-height:1.35;color:#49345f}
+      #study-history .history-session-subject{display:block;font-size:.72rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+      #study-history .history-session-topic{display:block;color:#77658d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+      #study-history .history-session-meta{display:block;color:#6d4b93;font-size:.66rem;line-height:1.35;overflow-wrap:anywhere}
+      #study-history .history-session-actions{display:flex;align-items:center;gap:.3rem;flex-wrap:wrap;min-width:0}
+      #study-history .history-session-edit,#study-history .history-session-open{appearance:none;border:1px solid #d9c1f1;background:#f4eaff;color:#60359a;border-radius:8px;padding:.3rem .42rem;font-size:.68rem;font-weight:600;cursor:pointer;white-space:nowrap;line-height:1.2}
+      #study-history .history-session-open{background:#fbf8ff;border-color:#e5d5f7}
+      #study-history .history-session-edit:hover,#study-history .history-session-open:hover{background:#eaddfa}
       #study-history .history-session-edit:disabled{opacity:.55;cursor:wait}
+      .history-notes-overlay{position:fixed;inset:0;z-index:10050;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(41,27,59,.28);backdrop-filter:blur(3px)}
+      .history-notes-bubble{position:relative;width:min(100%,440px);max-height:min(78vh,620px);overflow:auto;padding:1.15rem 1.2rem 1.2rem;background:linear-gradient(145deg,#fff 0%,#fcf8ff 100%);border:1px solid #e6d4f6;border-radius:20px;box-shadow:0 20px 60px rgba(56,32,82,.25);color:#39264f;box-sizing:border-box}
+      .history-notes-bubble-head{display:flex;align-items:flex-start;justify-content:space-between;gap:.8rem;padding-bottom:.7rem;border-bottom:1px solid #eee3f8}
+      .history-notes-bubble-head h3{font-family:inherit;font-size:1rem;line-height:1.35;margin:0;overflow-wrap:anywhere}
+      .history-notes-bubble-close{flex:0 0 auto;border:0;background:#f1e5fc;color:#5c368b;border-radius:50%;width:32px;height:32px;font-size:1.15rem;cursor:pointer}
+      .history-notes-label{margin:.85rem 0 .2rem;color:#826a99;font-size:.7rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
+      .history-notes-value{margin:0;font-size:.88rem;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+      .history-notes-stats{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.75rem}
+      .history-notes-stats span{padding:.25rem .5rem;border-radius:999px;background:#f1e8ff;color:#624286;font-size:.72rem;font-weight:700}
+      .history-notes-text{margin:.35rem 0 0;padding:.75rem .85rem;border-left:4px solid #b896e6;border-radius:0 12px 12px 0;background:#f7f0ff;color:#59436d;font-size:.88rem;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+      .history-notes-text.empty{color:#897a96;font-style:italic;background:#fbf9fe}
+      @media(max-width:500px){.history-notes-overlay{padding:.75rem}.history-notes-bubble{padding:1rem;border-radius:17px}}
     `;document.head.append(historyStyle);
+  }
+  function openSessionDetails(session, returnFocus){
+    const overlay=document.createElement('div');overlay.className='history-notes-overlay';
+    const bubble=document.createElement('section');bubble.className='history-notes-bubble';bubble.setAttribute('role','dialog');bubble.setAttribute('aria-modal','true');bubble.setAttribute('aria-label','Detalhes da sessão de estudo');
+    const header=document.createElement('div');header.className='history-notes-bubble-head';
+    const title=document.createElement('h3');title.textContent=session.subject||'Sessão de estudo';
+    const close=document.createElement('button');close.type='button';close.className='history-notes-bubble-close';close.textContent='×';close.setAttribute('aria-label','Fechar detalhes');
+    header.append(title,close);bubble.append(header);
+    const addLabel=(txt)=>{const el=document.createElement('p');el.className='history-notes-label';el.textContent=txt;bubble.append(el);};
+    const addValue=(txt)=>{const el=document.createElement('p');el.className='history-notes-value';el.textContent=txt;bubble.append(el);};
+    addLabel('Tópico / assunto');addValue(String(session.topic||'Nenhum assunto informado'));
+    addLabel('Tipo de atividade');addValue(String(session.activity_type||'Estudo / revisão'));
+    const stats=document.createElement('div');stats.className='history-notes-stats';
+    const dateLabel=session.studied_on?new Date(session.studied_on+'T12:00:00').toLocaleDateString('pt-BR'):'Data não informada';
+    [`${Number(session.minutes)||0} min`,`${Number(session.questions)||0} questões`,`${Number(session.correct)||0} acertos`,dateLabel].forEach(t=>{const chip=document.createElement('span');chip.textContent=t;stats.append(chip);});
+    bubble.append(stats);
+    addLabel('Anotações da sessão');const note=document.createElement('div');note.className='history-notes-text';note.textContent=String(session.notes||'').trim()||'Nenhuma anotação foi registrada nesta sessão.';if(!String(session.notes||'').trim())note.classList.add('empty');bubble.append(note);
+    overlay.append(bubble);document.body.append(overlay);
+    const closeDialog=()=>{overlay.remove();document.removeEventListener('keydown',onKeyDown);if(returnFocus&&returnFocus.isConnected)returnFocus.focus();};
+    const onKeyDown=(event)=>{if(event.key==='Escape')closeDialog();};
+    close.addEventListener('click',closeDialog);overlay.addEventListener('click',event=>{if(event.target===overlay)closeDialog();});document.addEventListener('keydown',onKeyDown);close.focus();
   }
   let client = null, mode = 'login', currentUser = null, elapsed = 0, startedAt = null, ticker = null;
   const fmt = seconds => { const h=Math.floor(seconds/3600), m=Math.floor(seconds%3600/60), s=seconds%60; return [h,m,s].map(n=>String(n).padStart(2,'0')).join(':'); };
@@ -135,7 +171,7 @@ if (menuToggle && navMenu) {
         minutes.textContent='0 min de estudo';
       }
       card.append(heading,subjects,minutes);
-      // Mantém o resumo diário compacto; detalhes das sessões ficam recolhidos.
+      // Resumo diário compacto; detalhes e anotações são exibidos em um balão flutuante.
       const daySessions=sessions.filter(x=>x.studied_on===key);
       if(daySessions.length){
         const details=document.createElement('details');details.className='history-day-sessions';
@@ -144,13 +180,12 @@ if (menuToggle && navMenu) {
         daySessions.forEach(session=>{
           const line=document.createElement('div');line.className='history-session-row';
           const detail=document.createElement('div');detail.className='history-session-detail';
-          const facts=document.createElement('div');
-          facts.textContent=`${session.subject||'Sem matéria'}${session.topic?' — '+session.topic:''} · ${Number(session.minutes)||0} min · ${Number(session.questions)||0} questões · ${Number(session.correct)||0} acertos`;
-          const note=document.createElement('div');note.className='history-session-notes';
-          const noteText=String(session.notes||'').trim();
-          note.textContent=noteText?'Anotações: '+noteText:'Sem anotações nesta sessão.';
-          if(!noteText)note.classList.add('empty');
-          detail.append(facts,note);
+          const subjectLine=document.createElement('strong');subjectLine.className='history-session-subject';subjectLine.textContent=session.subject||'Sem matéria';subjectLine.title=session.subject||'Sem matéria';
+          const topicLine=document.createElement('span');topicLine.className='history-session-topic';topicLine.textContent=session.topic||'Sem tópico informado';topicLine.title=session.topic||'Sem tópico informado';
+          const meta=document.createElement('span');meta.className='history-session-meta';meta.textContent=`${Number(session.minutes)||0} min · ${Number(session.questions)||0} questões · ${Number(session.correct)||0} acertos`;
+          detail.append(subjectLine,topicLine,meta);
+          const actions=document.createElement('div');actions.className='history-session-actions';
+          const open=document.createElement('button');open.type='button';open.className='history-session-open';open.textContent='💬 Detalhes';open.setAttribute('aria-label','Ver tópico e anotações de '+(session.subject||'sessão'));open.addEventListener('click',()=>openSessionDetails(session,open));
           const edit=document.createElement('button');edit.type='button';edit.textContent='Editar';edit.className='history-session-edit';
           edit.addEventListener('click',async()=>{
             const subject=prompt('Matéria:',session.subject||'');if(subject===null)return;
@@ -172,7 +207,7 @@ if (menuToggle && navMenu) {
             if(updateError){message('Não foi possível editar a sessão: '+friendlyError(updateError),'error');return;}
             message('Sessão corrigida. Os totais serão recalculados.','success');await loadHistory();if(activeEditalId)await openEdital(activeEditalId);
           });
-          line.append(detail,edit);list.append(line);
+          actions.append(open,edit);line.append(detail,actions);list.append(line);
         });
         details.append(summary,list);card.append(details);
       }
