@@ -31,8 +31,8 @@ if (menuToggle && navMenu) {
       #study-history .history-session-list{display:grid;gap:.4rem;margin-top:.5rem;min-width:0}
       #study-history .history-session-row{display:flex;flex-direction:column;align-items:stretch;gap:.35rem;padding:.45rem;background:rgba(255,255,255,.98);border:1px solid #eadcf8;border-radius:10px;box-sizing:border-box;min-width:0;max-width:100%}
       #study-history .history-session-detail{display:grid;gap:.15rem;min-width:0;max-width:100%;font-size:.7rem;line-height:1.35;color:#49345f}
-      #study-history .history-session-subject{display:block;font-size:.72rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-      #study-history .history-session-topic{display:block;color:#77658d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+      #study-history .history-session-subject{display:block;font-size:.76rem;font-weight:700;white-space:normal;overflow-wrap:anywhere;max-width:100%;line-height:1.35}
+      #study-history .history-session-topic{display:block;color:#77658d;white-space:normal;overflow-wrap:anywhere;max-width:100%;line-height:1.35}
       #study-history .history-session-meta{display:block;color:#6d4b93;font-size:.66rem;line-height:1.35;overflow-wrap:anywhere}
       #study-history .history-session-actions{display:flex;align-items:center;gap:.3rem;flex-wrap:wrap;min-width:0}
       #study-history .history-session-edit,#study-history .history-session-open{appearance:none;border:1px solid #d9c1f1;background:#f4eaff;color:#60359a;border-radius:8px;padding:.3rem .42rem;font-size:.68rem;font-weight:600;cursor:pointer;white-space:nowrap;line-height:1.2}
@@ -93,11 +93,12 @@ if (menuToggle && navMenu) {
   const minutesLabel = n => `${Math.floor(n/60)}h ${String(n%60).padStart(2,'0')}min`;
   function renderActivityAnalytics(allSessions){
     ensureActivityAnalytics();
-    const selected=[...dateSelection].sort();
+    const selected=[...confirmedDateSelection].sort();
     if(!selected.length){
-      const kpis=$('activity-kpis'); if(kpis) kpis.innerHTML='<p class="activity-empty">Selecione uma ou mais datas no calendário e clique em Confirmar datas.</p>';
-      const typeBox=$('activity-type-breakdown'); if(typeBox) typeBox.innerHTML='<p class="activity-empty">Aguardando seleção de datas.</p>';
-      const subjectBox=$('activity-subject-breakdown'); if(subjectBox) subjectBox.innerHTML='<p class="activity-empty">Aguardando seleção de datas.</p>';
+      const kpis=$('activity-kpis'); if(kpis) kpis.innerHTML='<p class="activity-empty">Selecione as datas desejadas e clique em “Confirmar datas”.</p>';
+      const typeBox=$('activity-type-breakdown'); if(typeBox) typeBox.innerHTML='<p class="activity-empty">Aguardando confirmação das datas.</p>';
+      const subjectBox=$('activity-subject-breakdown'); if(subjectBox) subjectBox.innerHTML='<p class="activity-empty">Aguardando confirmação das datas.</p>';
+      const hint=$('activity-period-hint'); if(hint) hint.textContent='Escolha uma ou mais datas no calendário e confirme para visualizar as matérias estudadas.';
       return;
     }
     const sessions=allSessions.filter(x=>x.studied_on&&selected.includes(x.studied_on));
@@ -105,18 +106,18 @@ if (menuToggle && navMenu) {
     if(periodHint) periodHint.textContent=`Exibindo estudos em ${selected.map(k=>new Date(k+'T12:00:00').toLocaleDateString('pt-BR')).join(', ')}.`;
     const totalMin=sessions.reduce((a,x)=>a+(Number(x.minutes)||0),0);const questions=sessions.reduce((a,x)=>a+(Number(x.questions)||0),0);
     const subjects=new Set(sessions.map(x=>(x.subject||'Sem matéria').trim()));
-    const kpis=$('activity-kpis');kpis.replaceChildren();
+    const kpis=$('activity-kpis');if(!kpis)return;kpis.replaceChildren();
     [["Tempo estudado",minutesLabel(totalMin)],["Sessões",String(sessions.length)],["Matérias",String(subjects.size)]].forEach(([label,value])=>{const card=document.createElement('div');card.className='activity-kpi';const small=document.createElement('small');small.textContent=label;const strong=document.createElement('strong');strong.textContent=value;card.append(small,strong);kpis.append(card);});
     const typeMap=new Map(),subjectMap=new Map();
     sessions.forEach(x=>{const type=(x.activity_type||'Estudo / revisão').trim();const subject=(x.subject||'Sem matéria').trim();const mins=Number(x.minutes)||0;
       if(!typeMap.has(type))typeMap.set(type,{minutes:0,count:0,questions:0});const t=typeMap.get(type);t.minutes+=mins;t.count++;t.questions+=Number(x.questions)||0;
       if(!subjectMap.has(subject))subjectMap.set(subject,{minutes:0,types:new Map()});const sub=subjectMap.get(subject);sub.minutes+=mins;sub.types.set(type,(sub.types.get(type)||0)+mins);
     });
-    const typeBox=$('activity-type-breakdown');typeBox.replaceChildren();
+    const typeBox=$('activity-type-breakdown');if(!typeBox)return;typeBox.replaceChildren();
     const sortedTypes=[...typeMap.entries()].sort((a,b)=>b[1].minutes-a[1].minutes);const maxType=Math.max(1,...sortedTypes.map(x=>x[1].minutes));
     if(!sortedTypes.length){const e=document.createElement('p');e.className='activity-empty';e.textContent='Nenhuma atividade encontrada neste período.';typeBox.append(e);}
     sortedTypes.forEach(([name,data])=>{const row=document.createElement('div');row.className='activity-type-row';const label=document.createElement('span');label.className='activity-type-name';label.textContent=name;const track=document.createElement('div');track.className='activity-type-track';const fill=document.createElement('span');fill.style.width=(data.minutes/maxType*100)+'%';track.append(fill);const time=document.createElement('b');time.className='activity-type-time';time.textContent=minutesLabel(data.minutes);time.title=`${data.count} sessões · ${data.questions} questões`;row.append(label,track,time);typeBox.append(row);});
-    const subjectBox=$('activity-subject-breakdown');subjectBox.replaceChildren();const sortedSubjects=[...subjectMap.entries()].sort((a,b)=>b[1].minutes-a[1].minutes);
+    const subjectBox=$('activity-subject-breakdown');if(!subjectBox)return;subjectBox.replaceChildren();const sortedSubjects=[...subjectMap.entries()].sort((a,b)=>b[1].minutes-a[1].minutes);
     if(!sortedSubjects.length){const e=document.createElement('p');e.className='activity-empty';e.textContent='Nenhuma matéria encontrada neste período.';subjectBox.append(e);}
     sortedSubjects.forEach(([name,data])=>{const card=document.createElement('div');card.className='activity-subject-row';const head=document.createElement('div');head.className='activity-subject-head';const title=document.createElement('strong');title.textContent=name;const total=document.createElement('span');total.textContent=minutesLabel(data.minutes);head.append(title,total);const chips=document.createElement('div');chips.className='activity-chips';[...data.types.entries()].sort((a,b)=>b[1]-a[1]).forEach(([type,mins])=>{const chip=document.createElement('span');chip.className='activity-chip';chip.textContent=`${type}: ${minutesLabel(mins)}`;chips.append(chip);});card.append(head,chips);subjectBox.append(card);});
   }
@@ -136,7 +137,8 @@ if (menuToggle && navMenu) {
   const showAuth = () => { currentUser=null; panel.hidden=false; dashboard.hidden=true; };
 
   // Calendário de consulta por datas — seleção múltipla e consulta local ao histórico carregado.
-  const dateSelection = new Set();
+  const dateSelection = new Set(); // seleção provisória no calendário
+  const confirmedDateSelection = new Set(); // datas efetivamente consultadas após confirmação
   let calendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   const dateKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   const parseDateKey = key => { const [y,m,d]=key.split('-').map(Number); return new Date(y,m-1,d,12); };
@@ -175,14 +177,26 @@ if (menuToggle && navMenu) {
     el.textContent=dates.length ? `${dates.length} ${dates.length===1?'data selecionada':'datas selecionadas'}: ${dates.map(k=>parseDateKey(k).toLocaleDateString('pt-BR')).join(', ')}` : 'Nenhuma data selecionada.';
   }
   function renderSelectedDateResults(){
-    const dates=[...dateSelection].sort();
-    if(!dates.length){$('activity-period-hint').textContent='Selecione pelo menos uma data antes de confirmar.';return;}
+    if(!dateSelection.size){
+      $('activity-period-hint').textContent='Selecione pelo menos uma data antes de confirmar.';
+      return;
+    }
+    confirmedDateSelection.clear();
+    dateSelection.forEach(key=>confirmedDateSelection.add(key));
     renderActivityAnalytics(window.__rafaellaStudySessions||[]);
+    const found=(window.__rafaellaStudySessions||[]).filter(s=>confirmedDateSelection.has(s.studied_on)).length;
+    $('activity-period-hint').textContent += ` ${found} sessão(ões) encontrada(s).`;
   }
   $('date-calendar-prev')?.addEventListener('click',()=>{calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()-1,1);renderDateCalendar();});
   $('date-calendar-next')?.addEventListener('click',()=>{calendarMonth=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth()+1,1);renderDateCalendar();});
-  $('date-calendar-clear')?.addEventListener('click',()=>{dateSelection.clear();renderDateCalendar();$('activity-period-hint').textContent='Seleção limpa. Escolha uma ou mais datas e confirme.';renderActivityAnalytics(window.__rafaellaStudySessions||[]);});
-  $('date-calendar-confirm')?.addEventListener('click',()=>{renderSelectedDateResults(); if(dateSelection.size) $('activity-period-hint').textContent += ` ${((window.__rafaellaStudySessions||[]).filter(s=>dateSelection.has(s.studied_on)).length)} sessão(ões) encontrada(s).`;});
+  $('date-calendar-clear')?.addEventListener('click',()=>{
+    dateSelection.clear();
+    confirmedDateSelection.clear();
+    renderDateCalendar();
+    $('activity-period-hint').textContent='Seleção limpa. Escolha uma ou mais datas e confirme.';
+    renderActivityAnalytics(window.__rafaellaStudySessions||[]);
+  });
+  $('date-calendar-confirm')?.addEventListener('click',renderSelectedDateResults);
   renderDateCalendar();
 
   async function loadHistory(){

@@ -1,20 +1,18 @@
-ATUALIZAÇÃO — PAINEL DE MATÉRIAS E ATIVIDADES
+ATUALIZAÇÃO DO CANTINHO DE ESTUDOS
 
-Esta versão posiciona o painel “Matérias por tipo de atividade” no final da área de indicadores, imediatamente antes de “Planejamento Inteligente”.
+Substitua no GitHub estes três arquivos:
+- estudos.html
+- estilo.css
+- script.js
 
-O filtro foi substituído por um mini calendário com duas datas:
-- Data inicial
-- Data final
-- Botão “Confirmar análise”
+Não substitua supabase-config.js nem altere o banco/Supabase.
 
-Selecione o intervalo desejado e clique em “Confirmar análise”. O painel então apresenta o tempo estudado, quantidade de sessões, matérias estudadas, distribuição por tipo de atividade e o detalhamento de cada matéria por atividade.
+O que foi corrigido:
+1. Painel "Matérias por tipo de atividade" fica depois do ranking e imediatamente antes de "Planejamento Inteligente".
+2. A caminhada dos últimos 7 dias usa cartões mais largos (4 colunas em telas grandes, 3/2/1 conforme a largura) e os nomes/tópicos podem quebrar linha sem se sobrepor.
+3. A seleção no calendário só atualiza a análise depois de clicar em "Confirmar datas". Alterar datas sem confirmar não muda a consulta aplicada.
+4. O HTML força a atualização de cache dos arquivos CSS e JS.
 
-COMO ATUALIZAR
-1. Extraia este ZIP.
-2. No GitHub, abra a pasta principal do site.
-3. Substitua estudos.html pelo arquivo deste pacote.
-4. Substitua script.js pelo arquivo deste pacote.
-5. Faça o commit das alterações.
-6. Abra a página de estudos e atualize sem cache (no computador: Ctrl+Shift+R; no celular, feche a aba e abra novamente).
-
-Não é necessário alterar estilo.css, index.html ou as configurações do Supabase.
+Validação realizada:
+- node --check script.js: aprovado.
+- Verificações estruturais dos elementos e da ordem do painel: aprovadas.
