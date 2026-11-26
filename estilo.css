@@ -988,3 +988,28 @@ body.study-page{margin:0;min-height:100vh;background:linear-gradient(135deg,#fff
   .study-page .study-login { margin:20px auto 30px; padding:25px 20px; border-radius:21px; }
   .study-page .study-footer { flex-direction:column; text-align:center; }
 }
+
+
+
+/* Calendário de seleção múltipla do painel de análise */
+.activity-calendar-wrap{margin:1rem 0}
+.activity-calendar-card{max-width:460px;padding:1rem;background:#fff;border:1px solid #eee4f6;border-radius:16px}
+.activity-calendar-toolbar{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:1rem}
+.activity-calendar-toolbar strong{text-transform:capitalize;color:#51376c}
+.activity-calendar-toolbar button{min-width:40px;padding:.4rem .7rem;font-size:1.2rem}
+.activity-calendar-weekdays,.activity-calendar-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;text-align:center}
+.activity-calendar-weekdays{margin-bottom:.45rem;color:#8a7a98;font-size:.72rem;font-weight:700}
+.activity-calendar-day{position:relative;min-width:0;aspect-ratio:1/1;border:1px solid transparent;border-radius:10px;background:#faf8fc;color:#4a385a;font:inherit;font-size:.84rem;cursor:pointer}
+.activity-calendar-day:hover{border-color:#b99bd9;background:#f5edfc}
+.activity-calendar-day.has-study:after{content:"";position:absolute;left:50%;bottom:4px;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:#9b70c8}
+.activity-calendar-day.selected{background:#7549a4;border-color:#7549a4;color:#fff;font-weight:800}
+.activity-calendar-day.selected.has-study:after{background:#fff}
+.activity-calendar-blank{aspect-ratio:1/1}
+.activity-calendar-legend{display:flex;flex-wrap:wrap;gap:.8rem;margin-top:.85rem;color:#776a84;font-size:.72rem}
+.activity-calendar-legend span{display:inline-flex;align-items:center;gap:.35rem}
+.activity-calendar-legend i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#9b70c8}
+.activity-calendar-legend i.is-selected{width:10px;height:10px;background:#7549a4}
+.activity-calendar-selection{min-height:1.2em;margin:.75rem 0;color:#60447b;font-size:.78rem;line-height:1.5;overflow-wrap:anywhere}
+.activity-calendar-actions{display:flex;flex-wrap:wrap;gap:.55rem}
+.activity-calendar-actions .button{flex:1;min-width:120px}
+@media(max-width:500px){.activity-calendar-card{max-width:none;padding:.75rem}.activity-calendar-weekdays,.activity-calendar-days{gap:3px}.activity-calendar-day{border-radius:8px}}
