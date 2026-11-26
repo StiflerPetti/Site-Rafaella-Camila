@@ -1,13 +1,13 @@
-ATUALIZAÇÃO — PAINEL DE MATÉRIAS POR TIPO DE ATIVIDADE
+ATUALIZAÇÃO — PAINEL DE MATÉRIAS E ATIVIDADES
 
-1. No GitHub, abra o arquivo script.js da área de estudos.
-2. Substitua todo o conteúdo pelo conteúdo deste script.js.
-3. Faça commit das alterações.
-4. Abra o Cantinho de Estudos e atualize com Ctrl+F5.
+Substitua DOIS arquivos no GitHub, mantendo exatamente os nomes:
+1. estudos.html
+2. script.js
 
-O painel novo é criado pelo próprio JavaScript. Não precisa alterar estudos.html, estilo.css nem o Supabase.
+Esta versão coloca a estrutura do painel diretamente no HTML. O JavaScript apenas carrega os dados do histórico e atualiza os indicadores e filtros.
 
-O painel inclui filtros: últimos 2, 6, 15 e 30 dias, mês atual e todo o histórico.
-Mostra tempo total, número de sessões, matérias, distribuição do tempo por tipo de atividade e detalhamento de cada matéria por atividade.
+Depois de enviar os dois arquivos e confirmar o commit, abra o site e faça uma atualização forçada da página (Ctrl+F5 no computador). No celular, feche a aba e abra novamente; se necessário, limpe o cache do navegador. Entre na conta para carregar os dados.
 
-Os valores são calculados a partir das sessões já salvas em public.study_sessions. Nenhuma tabela ou dado é alterado.
+O painel apresenta tempo total, quantidade de sessões, quantidade de matérias, distribuição do tempo por tipo de atividade e, para cada matéria, os tipos de atividade realizados. Filtros: últimos 2, 6, 15 e 30 dias, mês atual e todo o histórico.
+
+Nenhum dado do Supabase é alterado por esta atualização.

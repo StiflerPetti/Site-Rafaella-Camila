@@ -76,15 +76,7 @@ if (menuToggle && navMenu) {
   }
   // Painel analítico: distribuição das matérias por tipo de atividade e período.
   function ensureActivityAnalytics(){
-    if($('activity-analytics')) return;
-    const base=$('.analytics-grid'); if(!base) return;
-    const section=document.createElement('section'); section.id='activity-analytics'; section.className='analytics-card activity-analytics';
-    section.innerHTML=`
-      <div class="analytics-title"><div><p class="eyebrow">MAPA DO SEU ESTUDO</p><h3>Matérias por tipo de atividade</h3><p class="ranking-subtitle">Veja onde seu tempo está sendo investido e como cada matéria foi estudada.</p></div><span class="chart-icon">▦</span></div>
-      <div class="activity-filter-wrap"><label for="activity-period">Período de análise</label><select id="activity-period" aria-label="Período de análise"><option value="2">Últimos 2 dias</option><option value="6" selected>Últimos 6 dias</option><option value="15">Últimos 15 dias</option><option value="30">Últimos 30 dias</option><option value="month">Mês atual</option><option value="all">Todo o histórico</option></select></div>
-      <div class="activity-kpis" id="activity-kpis"></div>
-      <div class="activity-analysis-grid"><div><h4>Tempo por tipo de atividade</h4><div id="activity-type-breakdown" class="activity-type-breakdown"></div></div><div><h4>Matérias estudadas</h4><div id="activity-subject-breakdown" class="activity-subject-breakdown"></div></div></div>`;
-    base.insertAdjacentElement('afterend',section);
+    // A estrutura do painel fica diretamente no estudos.html; aqui cuidamos apenas do estilo e do filtro.
     if(!document.getElementById('activity-analytics-style')){
       const st=document.createElement('style');st.id='activity-analytics-style';st.textContent=`
         .activity-analytics{margin:1.25rem 0;padding:clamp(1rem,2.5vw,1.5rem);border:1px solid #eadcf8;border-radius:20px;background:linear-gradient(145deg,#fff 0%,#fcf9ff 100%)}
@@ -97,7 +89,11 @@ if (menuToggle && navMenu) {
         @media(max-width:420px){.activity-kpis{grid-template-columns:1fr}.activity-type-row{grid-template-columns:minmax(80px,1fr) minmax(55px,1.2fr) auto;gap:.35rem}}
       `;document.head.append(st);
     }
-    $('activity-period').addEventListener('change',()=>renderActivityAnalytics(window.__rafaellaStudySessions||[]));
+    const period=$('activity-period');
+    if(period && !period.dataset.activityBound){
+      period.addEventListener('change',()=>renderActivityAnalytics(window.__rafaellaStudySessions||[]));
+      period.dataset.activityBound='true';
+    }
   }
   const minutesLabel = n => `${Math.floor(n/60)}h ${String(n%60).padStart(2,'0')}min`;
   function renderActivityAnalytics(allSessions){
