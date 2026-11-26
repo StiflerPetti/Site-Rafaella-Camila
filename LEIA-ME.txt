@@ -1,18 +1,12 @@
-ATUALIZAÇÃO DO CANTINHO DE ESTUDOS
+ATUALIZAÇÃO — POSIÇÃO DO PAINEL E MENU LATERAL
 
-Substitua no GitHub estes três arquivos:
+Substitua no GitHub somente estes dois arquivos:
 - estudos.html
 - estilo.css
-- script.js
 
-Não substitua supabase-config.js nem altere o banco/Supabase.
+O script.js não foi alterado nesta atualização.
 
-O que foi corrigido:
-1. Painel "Matérias por tipo de atividade" fica depois do ranking e imediatamente antes de "Planejamento Inteligente".
-2. A caminhada dos últimos 7 dias usa cartões mais largos (4 colunas em telas grandes, 3/2/1 conforme a largura) e os nomes/tópicos podem quebrar linha sem se sobrepor.
-3. A seleção no calendário só atualiza a análise depois de clicar em "Confirmar datas". Alterar datas sem confirmar não muda a consulta aplicada.
-4. O HTML força a atualização de cache dos arquivos CSS e JS.
+O painel “Matérias por tipo de atividade” passa a aparecer depois da caminhada/ranking e imediatamente antes de “Planejamento Inteligente”.
+Os links da lateral ficam logo abaixo da marca; a frase motivacional vai para o rodapé da barra. Em telas pequenas, a lateral volta ao fluxo normal da página.
 
-Validação realizada:
-- node --check script.js: aprovado.
-- Verificações estruturais dos elementos e da ordem do painel: aprovadas.
+Não altera dados nem configurações do Supabase.
