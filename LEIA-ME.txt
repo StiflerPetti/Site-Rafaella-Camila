@@ -1,13 +1,13 @@
-CORREÇÃO DE LAYOUT — RAFAELLA
+ATUALIZAÇÃO — PAINEL DE MATÉRIAS POR TIPO DE ATIVIDADE
 
-Esta versão corrige a mistura entre o layout antigo e o novo.
+1. No GitHub, abra o arquivo script.js da área de estudos.
+2. Substitua todo o conteúdo pelo conteúdo deste script.js.
+3. Faça commit das alterações.
+4. Abra o Cantinho de Estudos e atualize com Ctrl+F5.
 
-No GitHub, substitua SOMENTE estes dois arquivos pelos arquivos deste pacote:
-- estudos.html
-- estilo.css
+O painel novo é criado pelo próprio JavaScript. Não precisa alterar estudos.html, estilo.css nem o Supabase.
 
-Não substitua script.js nem supabase-config.js.
+O painel inclui filtros: últimos 2, 6, 15 e 30 dias, mês atual e todo o histórico.
+Mostra tempo total, número de sessões, matérias, distribuição do tempo por tipo de atividade e detalhamento de cada matéria por atividade.
 
-A atualização mantém os IDs usados pelo JavaScript e pelo Supabase, organiza a ordem visual para mostrar cronômetro e formulário primeiro, indicadores e histórico em seguida, e planejamento/edital no final. O cronômetro fica com números maiores.
-
-Depois do commit, aguarde a publicação e atualize o site com Ctrl+F5.
+Os valores são calculados a partir das sessões já salvas em public.study_sessions. Nenhuma tabela ou dado é alterado.

@@ -74,6 +74,57 @@ if (menuToggle && navMenu) {
     const onKeyDown=(event)=>{if(event.key==='Escape')closeDialog();};
     close.addEventListener('click',closeDialog);overlay.addEventListener('click',event=>{if(event.target===overlay)closeDialog();});document.addEventListener('keydown',onKeyDown);close.focus();
   }
+  // Painel analítico: distribuição das matérias por tipo de atividade e período.
+  function ensureActivityAnalytics(){
+    if($('activity-analytics')) return;
+    const base=$('.analytics-grid'); if(!base) return;
+    const section=document.createElement('section'); section.id='activity-analytics'; section.className='analytics-card activity-analytics';
+    section.innerHTML=`
+      <div class="analytics-title"><div><p class="eyebrow">MAPA DO SEU ESTUDO</p><h3>Matérias por tipo de atividade</h3><p class="ranking-subtitle">Veja onde seu tempo está sendo investido e como cada matéria foi estudada.</p></div><span class="chart-icon">▦</span></div>
+      <div class="activity-filter-wrap"><label for="activity-period">Período de análise</label><select id="activity-period" aria-label="Período de análise"><option value="2">Últimos 2 dias</option><option value="6" selected>Últimos 6 dias</option><option value="15">Últimos 15 dias</option><option value="30">Últimos 30 dias</option><option value="month">Mês atual</option><option value="all">Todo o histórico</option></select></div>
+      <div class="activity-kpis" id="activity-kpis"></div>
+      <div class="activity-analysis-grid"><div><h4>Tempo por tipo de atividade</h4><div id="activity-type-breakdown" class="activity-type-breakdown"></div></div><div><h4>Matérias estudadas</h4><div id="activity-subject-breakdown" class="activity-subject-breakdown"></div></div></div>`;
+    base.insertAdjacentElement('afterend',section);
+    if(!document.getElementById('activity-analytics-style')){
+      const st=document.createElement('style');st.id='activity-analytics-style';st.textContent=`
+        .activity-analytics{margin:1.25rem 0;padding:clamp(1rem,2.5vw,1.5rem);border:1px solid #eadcf8;border-radius:20px;background:linear-gradient(145deg,#fff 0%,#fcf9ff 100%)}
+        .activity-filter-wrap{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;margin:1rem 0}.activity-filter-wrap label{font-size:.82rem;font-weight:700;color:#59436d}.activity-filter-wrap select{min-width:180px;padding:.65rem .8rem;border:1px solid #dfc9f2;border-radius:10px;background:#fff;color:#49345f;font:inherit}
+        .activity-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.7rem;margin:1rem 0}.activity-kpi{padding:.85rem 1rem;border:1px solid #eee2f8;border-radius:13px;background:#fff}.activity-kpi small{display:block;color:#826a99;font-size:.72rem}.activity-kpi strong{display:block;margin-top:.2rem;color:#6840a2;font-size:1.25rem}
+        .activity-analysis-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:1.2rem;margin-top:1rem}.activity-analysis-grid h4{margin:.2rem 0 .8rem;color:#49345f;font-size:.9rem}.activity-type-breakdown,.activity-subject-breakdown{display:grid;gap:.65rem}
+        .activity-type-row{display:grid;grid-template-columns:minmax(95px,1fr) minmax(80px,2fr) auto;align-items:center;gap:.55rem}.activity-type-name{font-size:.78rem;color:#59436d;overflow-wrap:anywhere}.activity-type-track{height:9px;border-radius:99px;background:#f0e8f8;overflow:hidden}.activity-type-track span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#a47ad6,#7046b1)}.activity-type-time{font-size:.75rem;font-weight:700;color:#6840a2;white-space:nowrap}
+        .activity-subject-row{padding:.7rem .8rem;border:1px solid #eee2f8;border-radius:12px;background:#fff}.activity-subject-head{display:flex;justify-content:space-between;gap:.6rem;align-items:baseline;margin-bottom:.45rem}.activity-subject-head strong{font-size:.82rem;color:#49345f;overflow-wrap:anywhere}.activity-subject-head span{font-size:.75rem;color:#6840a2;font-weight:700;white-space:nowrap}.activity-chips{display:flex;gap:.35rem;flex-wrap:wrap}.activity-chip{padding:.25rem .5rem;border-radius:99px;background:#f5effc;color:#67468e;font-size:.68rem;line-height:1.35}.activity-empty{padding:.8rem;border:1px dashed #dfc9f2;border-radius:12px;color:#826a99;font-size:.8rem}
+        @media(max-width:700px){.activity-analysis-grid{grid-template-columns:1fr}.activity-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.activity-kpi{padding:.7rem}.activity-kpi strong{font-size:1.05rem}}
+        @media(max-width:420px){.activity-kpis{grid-template-columns:1fr}.activity-type-row{grid-template-columns:minmax(80px,1fr) minmax(55px,1.2fr) auto;gap:.35rem}}
+      `;document.head.append(st);
+    }
+    $('activity-period').addEventListener('change',()=>renderActivityAnalytics(window.__rafaellaStudySessions||[]));
+  }
+  const minutesLabel = n => `${Math.floor(n/60)}h ${String(n%60).padStart(2,'0')}min`;
+  function renderActivityAnalytics(allSessions){
+    ensureActivityAnalytics(); if(!$('activity-period')) return;
+    const choice=$('activity-period').value; const now=new Date();now.setHours(12,0,0,0);
+    const dateKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    let start=null,end=dateKey(now);
+    if(choice==='month') start=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+    else if(choice!=='all'){const days=Number(choice);const d=new Date(now);d.setDate(d.getDate()-(days-1));start=dateKey(d);}
+    const sessions=allSessions.filter(x=>choice==='all'||(x.studied_on&&x.studied_on>=start&&x.studied_on<=end));
+    const totalMin=sessions.reduce((a,x)=>a+(Number(x.minutes)||0),0);const questions=sessions.reduce((a,x)=>a+(Number(x.questions)||0),0);
+    const subjects=new Set(sessions.map(x=>(x.subject||'Sem matéria').trim()));
+    const kpis=$('activity-kpis');kpis.replaceChildren();
+    [["Tempo estudado",minutesLabel(totalMin)],["Sessões",String(sessions.length)],["Matérias",String(subjects.size)]].forEach(([label,value])=>{const card=document.createElement('div');card.className='activity-kpi';const small=document.createElement('small');small.textContent=label;const strong=document.createElement('strong');strong.textContent=value;card.append(small,strong);kpis.append(card);});
+    const typeMap=new Map(),subjectMap=new Map();
+    sessions.forEach(x=>{const type=(x.activity_type||'Estudo / revisão').trim();const subject=(x.subject||'Sem matéria').trim();const mins=Number(x.minutes)||0;
+      if(!typeMap.has(type))typeMap.set(type,{minutes:0,count:0,questions:0});const t=typeMap.get(type);t.minutes+=mins;t.count++;t.questions+=Number(x.questions)||0;
+      if(!subjectMap.has(subject))subjectMap.set(subject,{minutes:0,types:new Map()});const sub=subjectMap.get(subject);sub.minutes+=mins;sub.types.set(type,(sub.types.get(type)||0)+mins);
+    });
+    const typeBox=$('activity-type-breakdown');typeBox.replaceChildren();
+    const sortedTypes=[...typeMap.entries()].sort((a,b)=>b[1].minutes-a[1].minutes);const maxType=Math.max(1,...sortedTypes.map(x=>x[1].minutes));
+    if(!sortedTypes.length){const e=document.createElement('p');e.className='activity-empty';e.textContent='Nenhuma atividade encontrada neste período.';typeBox.append(e);}
+    sortedTypes.forEach(([name,data])=>{const row=document.createElement('div');row.className='activity-type-row';const label=document.createElement('span');label.className='activity-type-name';label.textContent=name;const track=document.createElement('div');track.className='activity-type-track';const fill=document.createElement('span');fill.style.width=(data.minutes/maxType*100)+'%';track.append(fill);const time=document.createElement('b');time.className='activity-type-time';time.textContent=minutesLabel(data.minutes);time.title=`${data.count} sessões · ${data.questions} questões`;row.append(label,track,time);typeBox.append(row);});
+    const subjectBox=$('activity-subject-breakdown');subjectBox.replaceChildren();const sortedSubjects=[...subjectMap.entries()].sort((a,b)=>b[1].minutes-a[1].minutes);
+    if(!sortedSubjects.length){const e=document.createElement('p');e.className='activity-empty';e.textContent='Nenhuma matéria encontrada neste período.';subjectBox.append(e);}
+    sortedSubjects.forEach(([name,data])=>{const card=document.createElement('div');card.className='activity-subject-row';const head=document.createElement('div');head.className='activity-subject-head';const title=document.createElement('strong');title.textContent=name;const total=document.createElement('span');total.textContent=minutesLabel(data.minutes);head.append(title,total);const chips=document.createElement('div');chips.className='activity-chips';[...data.types.entries()].sort((a,b)=>b[1]-a[1]).forEach(([type,mins])=>{const chip=document.createElement('span');chip.className='activity-chip';chip.textContent=`${type}: ${minutesLabel(mins)}`;chips.append(chip);});card.append(head,chips);subjectBox.append(card);});
+  }
   let client = null, mode = 'login', currentUser = null, elapsed = 0, startedAt = null, ticker = null;
   const fmt = seconds => { const h=Math.floor(seconds/3600), m=Math.floor(seconds%3600/60), s=seconds%60; return [h,m,s].map(n=>String(n).padStart(2,'0')).join(':'); };
   const message = (text, kind='info') => { status.textContent=text; status.className='auth-message '+kind; };
@@ -93,6 +144,9 @@ if (menuToggle && navMenu) {
     const {data,error}=await client.from('study_sessions').select('id,subject,topic,activity_type,minutes,questions,correct,performance_reported,notes,studied_on,created_at').eq('user_id',currentUser.id).order('studied_on',{ascending:false}).order('created_at',{ascending:false});
     if(error){$('study-history').textContent='Não foi possível carregar o histórico: '+friendlyError(error);return;}
     const sessions=data||[];
+    window.__rafaellaStudySessions=sessions;
+    ensureActivityAnalytics();
+    renderActivityAnalytics(sessions);
     const {data:catalogData} = await client.from('study_subjects').select('name').eq('user_id',currentUser.id).order('name');
     const subjectList = [...new Set([...(catalogData||[]).map(x=>x.name), ...sessions.map(x => (x.subject || '').trim())].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
     const subjectSelect = $('study-subject');
