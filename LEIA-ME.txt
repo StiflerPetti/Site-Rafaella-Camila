@@ -1,13 +1,20 @@
 ATUALIZAÇÃO — PAINEL DE MATÉRIAS E ATIVIDADES
 
-Substitua DOIS arquivos no GitHub, mantendo exatamente os nomes:
-1. estudos.html
-2. script.js
+Esta versão posiciona o painel “Matérias por tipo de atividade” no final da área de indicadores, imediatamente antes de “Planejamento Inteligente”.
 
-Esta versão coloca a estrutura do painel diretamente no HTML. O JavaScript apenas carrega os dados do histórico e atualiza os indicadores e filtros.
+O filtro foi substituído por um mini calendário com duas datas:
+- Data inicial
+- Data final
+- Botão “Confirmar análise”
 
-Depois de enviar os dois arquivos e confirmar o commit, abra o site e faça uma atualização forçada da página (Ctrl+F5 no computador). No celular, feche a aba e abra novamente; se necessário, limpe o cache do navegador. Entre na conta para carregar os dados.
+Selecione o intervalo desejado e clique em “Confirmar análise”. O painel então apresenta o tempo estudado, quantidade de sessões, matérias estudadas, distribuição por tipo de atividade e o detalhamento de cada matéria por atividade.
 
-O painel apresenta tempo total, quantidade de sessões, quantidade de matérias, distribuição do tempo por tipo de atividade e, para cada matéria, os tipos de atividade realizados. Filtros: últimos 2, 6, 15 e 30 dias, mês atual e todo o histórico.
+COMO ATUALIZAR
+1. Extraia este ZIP.
+2. No GitHub, abra a pasta principal do site.
+3. Substitua estudos.html pelo arquivo deste pacote.
+4. Substitua script.js pelo arquivo deste pacote.
+5. Faça o commit das alterações.
+6. Abra a página de estudos e atualize sem cache (no computador: Ctrl+Shift+R; no celular, feche a aba e abra novamente).
 
-Nenhum dado do Supabase é alterado por esta atualização.
+Não é necessário alterar estilo.css, index.html ou as configurações do Supabase.
