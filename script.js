@@ -80,7 +80,7 @@ if (menuToggle && navMenu) {
     if(!document.getElementById('activity-analytics-style')){
       const st=document.createElement('style');st.id='activity-analytics-style';st.textContent=`
         .activity-analytics{margin:1.25rem 0;padding:clamp(1rem,2.5vw,1.5rem);border:1px solid #eadcf8;border-radius:20px;background:linear-gradient(145deg,#fff 0%,#fcf9ff 100%)}
-        .activity-filter-wrap{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;margin:1rem 0}.activity-filter-wrap label{font-size:.82rem;font-weight:700;color:#59436d}.activity-filter-wrap select{min-width:180px;padding:.65rem .8rem;border:1px solid #dfc9f2;border-radius:10px;background:#fff;color:#49345f;font:inherit}
+        .activity-filter-wrap{display:flex;align-items:end;gap:.7rem;flex-wrap:wrap;margin:1rem 0}.activity-date-field{display:grid;gap:.35rem}.activity-filter-wrap label{font-size:.78rem;font-weight:700;color:#59436d}.activity-filter-wrap input[type=date]{min-width:155px;padding:.65rem .7rem;border:1px solid #dfc9f2;border-radius:10px;background:#fff;color:#49345f;font:inherit}.activity-date-separator{padding-bottom:.65rem;color:#826a99;font-size:.82rem}.activity-confirm-button{min-height:42px}.activity-period-hint{margin:.25rem 0 .8rem;color:#826a99;font-size:.76rem}
         .activity-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.7rem;margin:1rem 0}.activity-kpi{padding:.85rem 1rem;border:1px solid #eee2f8;border-radius:13px;background:#fff}.activity-kpi small{display:block;color:#826a99;font-size:.72rem}.activity-kpi strong{display:block;margin-top:.2rem;color:#6840a2;font-size:1.25rem}
         .activity-analysis-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:1.2rem;margin-top:1rem}.activity-analysis-grid h4{margin:.2rem 0 .8rem;color:#49345f;font-size:.9rem}.activity-type-breakdown,.activity-subject-breakdown{display:grid;gap:.65rem}
         .activity-type-row{display:grid;grid-template-columns:minmax(95px,1fr) minmax(80px,2fr) auto;align-items:center;gap:.55rem}.activity-type-name{font-size:.78rem;color:#59436d;overflow-wrap:anywhere}.activity-type-track{height:9px;border-radius:99px;background:#f0e8f8;overflow:hidden}.activity-type-track span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#a47ad6,#7046b1)}.activity-type-time{font-size:.75rem;font-weight:700;color:#6840a2;white-space:nowrap}
@@ -89,21 +89,29 @@ if (menuToggle && navMenu) {
         @media(max-width:420px){.activity-kpis{grid-template-columns:1fr}.activity-type-row{grid-template-columns:minmax(80px,1fr) minmax(55px,1.2fr) auto;gap:.35rem}}
       `;document.head.append(st);
     }
-    const period=$('activity-period');
-    if(period && !period.dataset.activityBound){
-      period.addEventListener('change',()=>renderActivityAnalytics(window.__rafaellaStudySessions||[]));
-      period.dataset.activityBound='true';
+    const startInput=$('activity-start-date'), endInput=$('activity-end-date'), confirm=$('activity-confirm');
+    if(startInput && endInput && confirm && !confirm.dataset.activityBound){
+      const today=new Date();today.setHours(12,0,0,0);
+      const key=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      const sixDaysAgo=new Date(today);sixDaysAgo.setDate(sixDaysAgo.getDate()-5);
+      if(!startInput.value) startInput.value=key(sixDaysAgo);
+      if(!endInput.value) endInput.value=key(today);
+      confirm.addEventListener('click',()=>{
+        if(!startInput.value || !endInput.value){$('activity-period-hint').textContent='Selecione a data inicial e a data final.';return;}
+        if(startInput.value>endInput.value){$('activity-period-hint').textContent='A data inicial não pode ser posterior à data final.';return;}
+        renderActivityAnalytics(window.__rafaellaStudySessions||[]);
+      });
+      confirm.dataset.activityBound='true';
     }
   }
   const minutesLabel = n => `${Math.floor(n/60)}h ${String(n%60).padStart(2,'0')}min`;
   function renderActivityAnalytics(allSessions){
-    ensureActivityAnalytics(); if(!$('activity-period')) return;
-    const choice=$('activity-period').value; const now=new Date();now.setHours(12,0,0,0);
-    const dateKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    let start=null,end=dateKey(now);
-    if(choice==='month') start=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
-    else if(choice!=='all'){const days=Number(choice);const d=new Date(now);d.setDate(d.getDate()-(days-1));start=dateKey(d);}
-    const sessions=allSessions.filter(x=>choice==='all'||(x.studied_on&&x.studied_on>=start&&x.studied_on<=end));
+    ensureActivityAnalytics(); if(!$('activity-start-date') || !$('activity-end-date')) return;
+    const start=$('activity-start-date').value, end=$('activity-end-date').value;
+    if(!start || !end || start>end) return;
+    const sessions=allSessions.filter(x=>x.studied_on&&x.studied_on>=start&&x.studied_on<=end);
+    const periodHint=$('activity-period-hint');
+    if(periodHint) periodHint.textContent=`Exibindo estudos de ${new Date(start+'T12:00:00').toLocaleDateString('pt-BR')} até ${new Date(end+'T12:00:00').toLocaleDateString('pt-BR')}.`;
     const totalMin=sessions.reduce((a,x)=>a+(Number(x.minutes)||0),0);const questions=sessions.reduce((a,x)=>a+(Number(x.questions)||0),0);
     const subjects=new Set(sessions.map(x=>(x.subject||'Sem matéria').trim()));
     const kpis=$('activity-kpis');kpis.replaceChildren();
