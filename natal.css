@@ -1,0 +1,13 @@
+
+/* Decoração natalina reutilizável — independente do layout do site */
+#natal-lights{position:fixed;top:0;left:0;width:100%;height:34px;z-index:9997;pointer-events:none;display:flex;justify-content:space-around;align-items:flex-start;padding:0 3%;overflow:hidden}
+#natal-lights::before{content:"";position:absolute;top:5px;left:-2%;width:104%;height:19px;border-top:2px solid rgba(85,92,78,.55);border-radius:50%}
+.natal-bulb{position:relative;z-index:1;width:9px;height:13px;margin-top:7px;border-radius:50% 50% 45% 45%;background:var(--natal-color);box-shadow:0 0 7px 2px var(--natal-glow);animation:natalTwinkle var(--natal-speed) ease-in-out infinite alternate;transform-origin:top center}
+.natal-bulb::before{content:"";position:absolute;width:5px;height:4px;left:2px;top:-3px;border-radius:2px 2px 0 0;background:#65705d}
+#natal-snow{position:fixed;inset:0;width:100%;height:100%;z-index:9996;pointer-events:none}
+#natal-toggle{position:fixed;right:18px;bottom:18px;z-index:9998;border:1px solid rgba(255,255,255,.55);border-radius:999px;padding:10px 15px;background:rgba(53,42,66,.88);color:#fff;font:600 13px/1.2 system-ui,sans-serif;box-shadow:0 6px 22px rgba(38,22,50,.2);backdrop-filter:blur(12px);cursor:pointer;transition:transform .2s,background .2s}
+#natal-toggle:hover{transform:translateY(-2px);background:rgba(79,55,99,.96)}
+#natal-toggle:focus-visible{outline:3px solid #e6c76b;outline-offset:3px}
+@keyframes natalTwinkle{0%{opacity:.55;filter:brightness(.8);transform:scale(.86)}100%{opacity:1;filter:brightness(1.45);transform:scale(1.08)}}
+@media(max-width:600px){#natal-lights{height:27px;padding:0 1%}.natal-bulb{width:7px;height:10px;margin-top:6px}#natal-toggle{right:12px;bottom:12px;padding:9px 12px;font-size:12px}}
+@media(prefers-reduced-motion:reduce){.natal-bulb{animation:none;opacity:.85}#natal-toggle{transition:none}}
